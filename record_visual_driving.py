@@ -192,8 +192,7 @@ def record_episode(
             lane_changes += 1
             last_lane = current_lane
 
-        if info.get("overtake_bonus", 0.0) > 0:
-            overtakes += int(info.get("overtake_bonus", 0.0))
+        overtakes += info.get("overtake_count", 0)
 
         if raw_frame is not None:
             annotated_img = draw_telemetry(
@@ -284,8 +283,7 @@ def record_ppo_episode(
             lane_changes += 1
             last_lane = current_lane
 
-        if info.get("overtake_bonus", 0.0) > 0:
-            overtakes += int(info.get("overtake_bonus", 0.0))
+        overtakes += info.get("overtake_count", 0)
 
         if raw_frame is not None:
             annotated_img = draw_telemetry(
@@ -365,8 +363,7 @@ def record_classical_episode(
             lane_changes += 1
             last_lane = current_lane
 
-        if info.get("overtake_bonus", 0.0) > 0:
-            overtakes += int(info.get("overtake_bonus", 0.0))
+        overtakes += info.get("overtake_count", 0)
 
         if raw_frame is not None:
             annotated_img = draw_telemetry(

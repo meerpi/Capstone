@@ -299,8 +299,13 @@ class TacticalOvertakingWrapper(gym.Wrapper):
             ego = unwrapped.vehicle
             for v in unwrapped.road.vehicles:
                 if v is not ego and v.position[0] > ego.position[0]:
-                    self._vehicles_ahead.add(id(v))
+                    lane_diff = abs(v.lane_index[2] - ego.lane_index[2]) if hasattr(v, "lane_index") and hasattr(ego, "lane_index") else 0
+                    if lane_diff <= 1:
+                        self._vehicles_ahead.add(id(v))
         info["action_mask"] = self._get_action_mask()
+        info["overtake_count"] = 0
+        info["overtake_bonus"] = 0.0
+        info["headway_penalty"] = 0.0
         return obs, info
 
     def step(
@@ -311,18 +316,22 @@ class TacticalOvertakingWrapper(gym.Wrapper):
 
         bonus = 0.0
         penalty = 0.0
+        overtake_count = 0
 
         if hasattr(unwrapped, "vehicle") and hasattr(unwrapped, "road"):
             ego = unwrapped.vehicle
-            # Mechanism B: Overtake bonus
+            # Mechanism B: Overtake bonus (only for same or adjacent lane vehicles)
             current_ahead: set[int] = set()
             for v in unwrapped.road.vehicles:
                 if v is not ego:
                     v_id = id(v)
-                    if v.position[0] > ego.position[0]:
-                        current_ahead.add(v_id)
-                    elif v_id in self._vehicles_ahead:
-                        bonus += self.overtake_reward
+                    lane_diff = abs(v.lane_index[2] - ego.lane_index[2]) if hasattr(v, "lane_index") and hasattr(ego, "lane_index") else 0
+                    if lane_diff <= 1:
+                        if v.position[0] > ego.position[0]:
+                            current_ahead.add(v_id)
+                        elif v_id in self._vehicles_ahead:
+                            overtake_count += 1
+                            bonus += self.overtake_reward
             self._vehicles_ahead = current_ahead
 
             # Mechanism A: Headway penalty for tailgating a slower lead car in lane
@@ -341,6 +350,7 @@ class TacticalOvertakingWrapper(gym.Wrapper):
 
         shaped_reward = reward + bonus - penalty
         info["action_mask"] = self._get_action_mask()
+        info["overtake_count"] = overtake_count
         info["overtake_bonus"] = bonus
         info["headway_penalty"] = penalty
 
