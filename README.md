@@ -12,6 +12,10 @@ Specifically, we evaluate what happens when an autonomous vehicle equipped with 
 2. **On-Policy Policy Gradient RL:** Feedforward **PPO** (MLP + Invalid Action Masking).
 3. **On-Policy Recurrent RL:** Decoupled **PPO + LSTM** with temporal belief state tracking.
 
+> [!NOTE]
+> 📖 **Comprehensive Technical Report & Post-Mortem:**  
+> For an exhaustive, phase-by-phase breakdown of the full project trajectory, what worked, what failed, and complete root-cause analyses of simulation discretization quirks and reward pathologies, read **[PROJECT_CHRONICLE_AND_POSTMORTEM.md](PROJECT_CHRONICLE_AND_POSTMORTEM.md)**.
+
 ---
 
 ## 1. Executive Summary & Headline Results
@@ -120,6 +124,7 @@ Capstone/
 ├── .gitignore                      # Clean exclusion of temporary/venv/scratch files
 ├── requirements.txt                # Pinned dependencies
 ├── README.md                       # Comprehensive documentation & quickstart
+├── PROJECT_CHRONICLE_AND_POSTMORTEM.md # Complete technical trajectory, what worked, and post-mortem
 ├── benchmark_results.md            # Quantitative benchmark report
 ├── env_config.py                   # Sensor tiers, wrappers, frame stacking, and anti-jitter reward
 ├── train_optimal_overtaker.py      # End-to-end PPO trainer with anti-jitter and adjacent overtake bonuses
