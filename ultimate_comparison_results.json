@@ -1,0 +1,112 @@
+{
+  "classical": {
+    "full_adas_idm_only": {
+      "policy": "IDM Only (Lane-Keeping)",
+      "tier": "full_adas",
+      "crashes": 0,
+      "crash_fraction": "0/30",
+      "crash_rate": 0.0,
+      "mean_duration": 200.0,
+      "std_duration": 0.0,
+      "mean_speed_kmh": 81.4,
+      "mean_lane_changes": 0.0
+    },
+    "full_adas_idm_mobil": {
+      "policy": "IDM + MOBIL (Overtaking)",
+      "tier": "full_adas",
+      "crashes": 2,
+      "crash_fraction": "2/30",
+      "crash_rate": 6.7,
+      "mean_duration": 193.6,
+      "std_duration": 32.5,
+      "mean_speed_kmh": 83.4,
+      "mean_lane_changes": 5.8
+    },
+    "front_only_idm_only": {
+      "policy": "IDM Only (Lane-Keeping)",
+      "tier": "front_only",
+      "crashes": 0,
+      "crash_fraction": "0/30",
+      "crash_rate": 0.0,
+      "mean_duration": 200.0,
+      "std_duration": 0.0,
+      "mean_speed_kmh": 81.4,
+      "mean_lane_changes": 0.0
+    },
+    "front_only_idm_mobil": {
+      "policy": "IDM + MOBIL (Overtaking)",
+      "tier": "front_only",
+      "crashes": 15,
+      "crash_fraction": "15/30",
+      "crash_rate": 50.0,
+      "mean_duration": 147.1,
+      "std_duration": 64.3,
+      "mean_speed_kmh": 84.2,
+      "mean_lane_changes": 4.4
+    }
+  },
+  "ppo": {
+    "ppo_full_adas": {
+      "scenario": "highway",
+      "tier": "full_adas",
+      "model_path": "models/ppo_highway_full_adas_seed101.pt",
+      "episodes": 30,
+      "crashes": 0,
+      "crash_fraction": "0/30",
+      "crash_rate": 0.0,
+      "mean_duration": 200.0,
+      "std_duration": 0.0,
+      "mean_speed_kmh": 73.30884287716721,
+      "mean_lane_changes": 0.6666666666666666,
+      "policy": "PPO (MLP)",
+      "train_duration_sec": 1352.239565372467
+    },
+    "ppo_front_only": {
+      "scenario": "highway",
+      "tier": "front_only",
+      "model_path": "models/ppo_highway_front_only_seed101.pt",
+      "episodes": 30,
+      "crashes": 3,
+      "crash_fraction": "3/30",
+      "crash_rate": 10.0,
+      "mean_duration": 187.83333333333334,
+      "std_duration": 40.88690363538048,
+      "mean_speed_kmh": 79.2564204018273,
+      "mean_lane_changes": 1.5333333333333334,
+      "policy": "PPO (MLP)",
+      "train_duration_sec": 1383.060379743576
+    }
+  },
+  "rainbow": {
+    "rainbow_full_adas": {
+      "scenario": "highway",
+      "tier": "full_adas",
+      "model_path": "models/rainbow_highway_full_adas_seed101.pt",
+      "episodes": 30,
+      "crashes": 15,
+      "crash_fraction": "15/30",
+      "crash_rate": 50.0,
+      "mean_duration": 140.36666666666667,
+      "std_duration": 69.42597176529512,
+      "mean_speed_kmh": 89.96439033728892,
+      "mean_lane_changes": 3.7333333333333334,
+      "policy": "Rainbow DQN",
+      "train_duration_sec": 1234.8915145397186
+    },
+    "rainbow_front_only": {
+      "scenario": "highway",
+      "tier": "front_only",
+      "model_path": "models/rainbow_highway_front_only_seed101.pt",
+      "episodes": 30,
+      "crashes": 15,
+      "crash_fraction": "15/30",
+      "crash_rate": 50.0,
+      "mean_duration": 144.06666666666666,
+      "std_duration": 65.19403517364316,
+      "mean_speed_kmh": 89.96685469864701,
+      "mean_lane_changes": 3.533333333333333,
+      "policy": "Rainbow DQN",
+      "train_duration_sec": 1255.4643347263336
+    }
+  }
+}

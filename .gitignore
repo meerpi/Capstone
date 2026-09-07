@@ -1,0 +1,37 @@
+# Virtual environments & dependencies
+.venv/
+venv/
+env/
+.licenses/
+node_modules/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Shelved GPU Drive workspace (Round 1 focus on Highway-Env)
+gpudrive_workspace/
+
+# TensorBoard logs & run outputs
+runs/
+*.log
+
+# Excluded architectures & scratch scripts (Round 1 focus: PPO, PPO-LSTM, IDM, IDM+MOBIL)
+rainbow.py
+rainbow_highway.py
+models/rainbow_highway_*.pt
+models/test_decoupled.pt
+recovered_ppo.py
+train_full_adas_agile.py
+train_retuned_models.py
+train_stage3_ppo.py
+verify_traffic_density.py
+scan_overtakes.py
+
+# System & editor files
+.DS_Store
+.vscode/
+.idea/
+Report*.pdf

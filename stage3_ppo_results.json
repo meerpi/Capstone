@@ -1,0 +1,34 @@
+{
+  "full_adas": {
+    "scenario": "highway",
+    "tier": "full_adas",
+    "model_path": "models/ppo_highway_full_adas_seed101.pt",
+    "episodes": 30,
+    "crashes": 2,
+    "crash_fraction": "2/30",
+    "crash_rate": 6.666666666666667,
+    "mean_duration": 196.86666666666667,
+    "std_duration": 11.794725751604211,
+    "mean_speed_kmh": 74.37177693218139,
+    "mean_lane_changes": 0.0,
+    "train_duration_sec": 1344.3389468193054,
+    "train_seed": 101,
+    "total_timesteps": 800000
+  },
+  "front_only": {
+    "scenario": "highway",
+    "tier": "front_only",
+    "model_path": "models/ppo_highway_front_only_seed101.pt",
+    "episodes": 30,
+    "crashes": 0,
+    "crash_fraction": "0/30",
+    "crash_rate": 0.0,
+    "mean_duration": 200.0,
+    "std_duration": 0.0,
+    "mean_speed_kmh": 74.26883137674413,
+    "mean_lane_changes": 22.333333333333332,
+    "train_duration_sec": 1367.9544041156769,
+    "train_seed": 101,
+    "total_timesteps": 800000
+  }
+}
