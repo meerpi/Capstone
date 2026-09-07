@@ -357,6 +357,346 @@ class TacticalOvertakingWrapper(gym.Wrapper):
         return obs, shaped_reward, terminated, truncated, info
 
 
+class TacticalLaneObservationWrapper(gym.Wrapper):
+    """Structured lane-slot observation wrapper for tactical overtaking.
+
+    Produces a 27-dimensional observation vector organized from the driver's
+    tactical perspective:
+    - Ego State (5): speed, target_speed, lane_position, can_left, can_right
+    - Lane Slots (16): 4 lanes × (lead_dist, lead_dv, lag_dist, lag_dv)
+    - Tactical Signals (6): is_blocked, left_safe, right_safe, left_adv, right_adv, ttc
+
+    Also implements calibrated reward shaping:
+    - Persistent blockage penalty (cannot be escaped by braking)
+    - Calibrated collision penalty (-10.0)
+    - Active overtake bonus (+2.5)
+    - Lane change regularization (-0.05)
+    - Speed incentive scaled by (v - 20) / 10
+    """
+
+    TACTICAL_OBS_DIM = 27
+    NUM_LANES = 4
+    MAX_LEAD_DIST = 100.0
+    MAX_LAG_DIST = 100.0
+    MAX_DV = 20.0
+    BLOCK_DIST = 55.0
+    BLOCK_SPEED = 27.5
+    SAFE_MARGIN = 18.0
+    SPEED_NORM = 30.0
+    TARGET_SPEED = 30.0
+
+    def __init__(
+        self,
+        env: gym.Env,
+        collision_penalty: float = -50.0,
+        overtake_bonus: float = 1.0,
+        blockage_coef: float = 0.35,
+        lane_change_penalty: float = 0.05,
+        danger_zone: float = 8.0,
+        danger_penalty: float = 0.3,
+        jitter_penalty: float = 0.12,
+    ) -> None:
+        super().__init__(env)
+        self.collision_penalty = collision_penalty
+        self.overtake_bonus = overtake_bonus
+        self.blockage_coef = blockage_coef
+        self.lane_change_penalty = lane_change_penalty
+        self.danger_zone = danger_zone
+        self.danger_penalty = danger_penalty
+        self.jitter_penalty = jitter_penalty
+
+        self.observation_space = gym.spaces.Box(
+            low=-1.0, high=1.0, shape=(self.TACTICAL_OBS_DIM,), dtype=np.float32
+        )
+
+        self._vehicles_ahead: set[int] = set()
+        self._prev_lane: int | None = None
+        self._prev_action: int | None = None
+        self._steps_blocked: int = 0
+
+    def _build_tactical_obs(self) -> np.ndarray:
+        """Build the 27-dim structured tactical observation vector."""
+        unwrapped = self.env.unwrapped
+        ego = unwrapped.vehicle
+        road = unwrapped.road
+
+        obs = np.zeros(self.TACTICAL_OBS_DIM, dtype=np.float32)
+
+        # --- Ego State (5 features) ---
+        ego_speed = ego.speed
+        ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
+
+        obs[0] = np.clip(ego_speed / self.SPEED_NORM, 0.0, 1.0)
+        obs[1] = self.TARGET_SPEED / self.SPEED_NORM
+        obs[2] = np.clip(ego_lane / max(self.NUM_LANES - 1, 1), 0.0, 1.0)
+        obs[3] = 1.0 if ego_lane > 0 else 0.0  # can_lane_left
+        obs[4] = 1.0 if ego_lane < self.NUM_LANES - 1 else 0.0  # can_lane_right
+
+        # --- Lane Slots (16 features: 4 lanes × 4) ---
+        # For each lane, find closest lead and lag vehicle
+        lane_leads = {}  # lane_idx -> (dist, dv)
+        lane_lags = {}   # lane_idx -> (dist, dv)
+
+        ego_x = ego.position[0]
+
+        for v in road.vehicles:
+            if v is ego:
+                continue
+            v_lane = v.lane_index[2] if hasattr(v, "lane_index") else -1
+            if v_lane < 0 or v_lane >= self.NUM_LANES:
+                continue
+
+            dx = v.position[0] - ego_x
+            dv = v.speed - ego_speed  # positive = other faster
+
+            if dx > 0:  # lead vehicle
+                if v_lane not in lane_leads or dx < lane_leads[v_lane][0]:
+                    lane_leads[v_lane] = (dx, dv)
+            else:  # lag vehicle
+                lag_dist = abs(dx)
+                if v_lane not in lane_lags or lag_dist < lane_lags[v_lane][0]:
+                    lane_lags[v_lane] = (lag_dist, dv)
+
+        for lane_idx in range(self.NUM_LANES):
+            base = 5 + lane_idx * 4
+
+            if lane_idx in lane_leads:
+                d_lead, dv_lead = lane_leads[lane_idx]
+                obs[base + 0] = np.clip(d_lead / self.MAX_LEAD_DIST, 0.0, 1.0)
+                obs[base + 1] = np.clip(dv_lead / self.MAX_DV, -1.0, 1.0)
+            else:
+                obs[base + 0] = 1.0  # max distance (empty)
+                obs[base + 1] = 0.0
+
+            if lane_idx in lane_lags:
+                d_lag, dv_lag = lane_lags[lane_idx]
+                obs[base + 2] = np.clip(d_lag / self.MAX_LAG_DIST, 0.0, 1.0)
+                obs[base + 3] = np.clip(dv_lag / self.MAX_DV, -1.0, 1.0)
+            else:
+                obs[base + 2] = 1.0  # max distance (empty)
+                obs[base + 3] = 0.0
+
+        # --- Tactical Action Signals (6 features) ---
+        # Current lane lead info
+        cur_lead = lane_leads.get(ego_lane, (self.MAX_LEAD_DIST, 0.0))
+        cur_lead_dist, cur_lead_dv = cur_lead
+
+        # is_blocked: lead < BLOCK_DIST and lead is slower
+        is_blocked = (cur_lead_dist < self.BLOCK_DIST and
+                      (ego_speed + cur_lead_dv) < self.BLOCK_SPEED)
+        obs[21] = 1.0 if is_blocked else 0.0
+
+        # left_lane_safe
+        left_lane = ego_lane - 1
+        if left_lane >= 0:
+            l_lead = lane_leads.get(left_lane, (self.MAX_LEAD_DIST, 0.0))
+            l_lag = lane_lags.get(left_lane, (self.MAX_LAG_DIST, 0.0))
+            obs[22] = 1.0 if (l_lead[0] > self.SAFE_MARGIN and
+                              l_lag[0] > self.SAFE_MARGIN) else 0.0
+        else:
+            obs[22] = 0.0
+
+        # right_lane_safe
+        right_lane = ego_lane + 1
+        if right_lane < self.NUM_LANES:
+            r_lead = lane_leads.get(right_lane, (self.MAX_LEAD_DIST, 0.0))
+            r_lag = lane_lags.get(right_lane, (self.MAX_LAG_DIST, 0.0))
+            obs[23] = 1.0 if (r_lead[0] > self.SAFE_MARGIN and
+                              r_lag[0] > self.SAFE_MARGIN) else 0.0
+        else:
+            obs[23] = 0.0
+
+        # left_lane_advantage (speed of left lead vs current lead)
+        if left_lane >= 0 and left_lane in lane_leads:
+            left_lead_speed = ego_speed + lane_leads[left_lane][1]
+            cur_lead_speed = ego_speed + cur_lead_dv
+            obs[24] = np.clip((left_lead_speed - cur_lead_speed) / self.MAX_DV, -1.0, 1.0)
+        else:
+            obs[24] = 0.0
+
+        # right_lane_advantage
+        if right_lane < self.NUM_LANES and right_lane in lane_leads:
+            right_lead_speed = ego_speed + lane_leads[right_lane][1]
+            cur_lead_speed = ego_speed + cur_lead_dv
+            obs[25] = np.clip((right_lead_speed - cur_lead_speed) / self.MAX_DV, -1.0, 1.0)
+        else:
+            obs[25] = 0.0
+
+        # time_to_collision (normalized)
+        if cur_lead_dv < 0:  # closing in
+            ttc = cur_lead_dist / abs(cur_lead_dv)
+            obs[26] = np.clip(ttc / 10.0, 0.0, 1.0)  # normalize to 10s
+        else:
+            obs[26] = 1.0  # no collision risk
+
+        return obs
+
+    def _get_action_mask(self) -> np.ndarray:
+        """Return boolean mask of shape (5,) indicating valid discrete actions."""
+        unwrapped = self.env.unwrapped
+        if hasattr(unwrapped, "get_available_actions"):
+            avail = unwrapped.get_available_actions()
+            mask = np.zeros(5, dtype=bool)
+            for a in avail:
+                if 0 <= a < 5:
+                    mask[a] = True
+            return mask
+        return np.ones(5, dtype=bool)
+
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        _, info = self.env.reset(seed=seed, options=options)
+        self._vehicles_ahead.clear()
+        self._steps_blocked = 0
+        self._prev_action = None
+
+        unwrapped = self.env.unwrapped
+        ego = unwrapped.vehicle
+        self._prev_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
+
+        # Track vehicles ahead in adjacent corridor (|lane_diff| <= 1)
+        ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
+        for v in unwrapped.road.vehicles:
+            if v is not ego and v.position[0] > ego.position[0]:
+                v_lane = v.lane_index[2] if hasattr(v, "lane_index") else 0
+                if abs(v_lane - ego_lane) <= 1:
+                    self._vehicles_ahead.add(id(v))
+
+        obs = self._build_tactical_obs()
+        info["action_mask"] = self._get_action_mask()
+        info["overtake_count"] = 0
+        info["speed"] = ego.speed
+        return obs, info
+
+    def step(
+        self, action: int
+    ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
+        _, base_reward, terminated, truncated, info = self.env.step(action)
+
+        unwrapped = self.env.unwrapped
+        ego = unwrapped.vehicle
+
+        # --- Build tactical observation ---
+        obs = self._build_tactical_obs()
+
+        # --- Calibrated Reward Shaping (v3: crash-averse + anti-jitter + impatience) ---
+        reward = 0.0
+        overtake_count = 0
+
+        if ego.crashed:
+            reward = self.collision_penalty  # -50: must outweigh any speed gains
+        else:
+            # Speed incentive: scaled to 0.5 max (was 1.0)
+            speed_reward = 0.5 * np.clip((ego.speed - 20.0) / 10.0, 0.0, 1.0)
+            reward += speed_reward
+
+            # Survival bonus: +0.15 per step for staying alive
+            reward += 0.15
+
+            # Proximity danger penalty: penalize getting too close to others
+            min_dist = float('inf')
+            for v in unwrapped.road.vehicles:
+                if v is not ego:
+                    dx = v.position[0] - ego.position[0]
+                    dy = v.position[1] - ego.position[1]
+                    d = np.sqrt(dx**2 + dy**2)
+                    if d < min_dist:
+                        min_dist = d
+            if min_dist < self.danger_zone:
+                # Quadratic penalty: gets severe as distance → 0
+                proximity_frac = 1.0 - (min_dist / self.danger_zone)
+                reward -= self.danger_penalty * (proximity_frac ** 2)
+
+            # Persistent blockage penalty with escalating impatience
+            front, _ = unwrapped.road.neighbour_vehicles(ego, ego.lane_index)
+            if front is not None:
+                dist = front.position[0] - ego.position[0]
+                if 0.0 < dist < self.BLOCK_DIST and front.speed < self.BLOCK_SPEED:
+                    self._steps_blocked += 1
+                    # Impatience escalates from 1.0x to 2.5x after 10 steps (2 seconds)
+                    impatience_factor = 1.0 + min(max(self._steps_blocked - 10, 0) / 10.0, 1.5)
+                    frac = 1.0 - (dist / self.BLOCK_DIST)
+                    reward -= self.blockage_coef * frac * impatience_factor
+                else:
+                    self._steps_blocked = 0
+            else:
+                self._steps_blocked = 0
+
+            # Overtake bonus (strictly adjacent corridor: |lane_diff| <= 1)
+            current_ahead: set[int] = set()
+            ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
+            for v in unwrapped.road.vehicles:
+                if v is not ego:
+                    v_id = id(v)
+                    v_lane = v.lane_index[2] if hasattr(v, "lane_index") else 0
+                    lane_diff = abs(v_lane - ego_lane)
+                    if lane_diff <= 1:
+                        if v.position[0] > ego.position[0]:
+                            current_ahead.add(v_id)
+                        elif v_id in self._vehicles_ahead:
+                            overtake_count += 1
+            self._vehicles_ahead = current_ahead
+            reward += overtake_count * self.overtake_bonus
+
+            # Lane change regularization
+            new_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
+            if self._prev_lane is not None and new_lane != self._prev_lane:
+                reward -= self.lane_change_penalty
+            self._prev_lane = new_lane
+
+            # Action jitter penalty (discourage bang-bang oscillation between FASTER and SLOWER)
+            if self._prev_action is not None:
+                if (action == 3 and self._prev_action == 4) or (action == 4 and self._prev_action == 3):
+                    reward -= self.jitter_penalty
+                elif action in [3, 4] and self._prev_action in [1, 3, 4] and action != self._prev_action:
+                    reward -= self.jitter_penalty * 0.4
+            self._prev_action = action
+
+        info["action_mask"] = self._get_action_mask()
+        info["overtake_count"] = overtake_count if not ego.crashed else 0
+        info["speed"] = ego.speed
+        info["crashed"] = ego.crashed
+
+        return obs, float(reward), terminated, truncated, info
+
+
+class FrameStackTacticalWrapper(gym.Wrapper):
+    """Frame stacking wrapper for tactical observations.
+
+    Stacks K consecutive tactical observation frames to provide temporal
+    derivatives (closing rates, acceleration signals) without LSTM complexity.
+    """
+
+    def __init__(self, env: gym.Env, k: int = 3) -> None:
+        super().__init__(env)
+        self.k = k
+        inner_dim = env.observation_space.shape[0]
+        self.stacked_dim = inner_dim * k
+        self.observation_space = gym.spaces.Box(
+            low=-1.0, high=1.0, shape=(self.stacked_dim,), dtype=np.float32
+        )
+        self._frames: list[np.ndarray] = []
+
+    def reset(
+        self, *, seed: int | None = None, options: dict[str, Any] | None = None
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        obs, info = self.env.reset(seed=seed, options=options)
+        self._frames = [obs.copy() for _ in range(self.k)]
+        return self._get_stacked_obs(), info
+
+    def step(
+        self, action: int
+    ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        self._frames.pop(0)
+        self._frames.append(obs.copy())
+        return self._get_stacked_obs(), reward, terminated, truncated, info
+
+    def _get_stacked_obs(self) -> np.ndarray:
+        return np.concatenate(self._frames, axis=0).astype(np.float32)
+
+
 def make_env(
     scenario: str,
     tier: str,
@@ -414,6 +754,65 @@ def make_env(
         wrapped_env.action_space.seed(seed)
 
     return wrapped_env
+
+
+def make_optimal_env(
+    lanes_count: int = 4,
+    vehicles_density: float = 1.4,
+    vehicles_count: int = 14,
+    seed: int | None = None,
+    render_mode: str | None = None,
+    frame_stack_k: int = 3,
+    duration: int = 100,
+) -> gym.Env:
+    """Create an environment with TacticalLaneObservation + FrameStack wrappers.
+
+    This is the factory function for the optimal overtaking agent pipeline.
+
+    Args:
+        lanes_count: Number of highway lanes.
+        vehicles_density: Traffic density parameter.
+        vehicles_count: Total NPC vehicles.
+        seed: Random seed.
+        render_mode: Rendering mode ('human', 'rgb_array', or None).
+        frame_stack_k: Number of frames to stack (0 = no stacking).
+        duration: Episode duration in simulated seconds (100s = 500 steps).
+
+    Returns:
+        Wrapped environment producing 81-dim (K=3) or 27-dim (K=0) observations.
+    """
+    cfg = copy.deepcopy(DEFAULT_ENV_CONFIG)
+    cfg.update({
+        "lanes_count": lanes_count,
+        "vehicles_density": vehicles_density,
+        "vehicles_count": vehicles_count,
+        "duration": duration,
+        "simulation_frequency": 5,  # 1:1 with policy_freq → +33% SPS
+        "collision_reward": 0.0,  # reward shaping handled by wrapper
+        "high_speed_reward": 0.0,
+        "right_lane_reward": 0.0,
+        "on_road_reward": 0.0,
+        "lane_change_reward": 0.0,
+        "normalize_reward": False,
+        "reward_speed_range": [18, 30],
+    })
+
+    env = gym.make(
+        "highway-fast-v0",
+        render_mode=render_mode,
+        config=cfg,
+    )
+
+    env = TacticalLaneObservationWrapper(env)
+
+    if frame_stack_k > 0:
+        env = FrameStackTacticalWrapper(env, k=frame_stack_k)
+
+    if seed is not None:
+        env.reset(seed=seed)
+        env.action_space.seed(seed)
+
+    return env
 
 
 def _run_smoke_test() -> None:

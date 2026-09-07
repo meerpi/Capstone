@@ -88,29 +88,61 @@ All episodes recorded at 10 FPS with complete telemetry HUD overlays displaying 
 | *Zero lane changes; strictly maintains headway.* | *Identical performance; unaffected by rear sensor removal.* |
 | [Download MP4](visualizations/classical_idm_full_adas_seed2002.mp4) | [Download MP4](visualizations/classical_idm_front_only_seed2002.mp4) |
 
+### 3.5 Optimal Tactical Overtaker (Anti-Jitter Regularization & Top 10 Demonstrations)
+
+Trained with continuous headway incentives, anti-jitter regularization ($-0.12$ action-switching penalty), and strictly adjacent-corridor overtake accounting, this 4-lane PPO agent exhibits dynamic acceleration up to $108.0\text{ km/h}$, proactive slalom lane changes around slow clusters, and stable cruising without stutter.
+
+#### Top 10 Non-Idle Overtaking & Obstacle Avoidance Gallery (Selected across 150 Seeds)
+Every episode in this Top 10 completed the full $500\text{ steps}$ ($100\text{ seconds}$) without collisions, executing active lateral evasion and longitudinal speed regulation:
+
+| Rank | Seed | Overtakes | Lane Changes | FASTER / IDLE / SLOWER | Mean Speed | Max Speed | GIF Animation | Video MP4 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **#1** | **3094** | **5** | **4** | 102 / 288 / 101 | **86.7 km/h** | **108.0 km/h** | [GIF](visualizations/top10/ppo_top_1_seed_3094.gif) | [MP4](visualizations/top10/ppo_top_1_seed_3094.mp4) |
+| **#2** | **3115** | **1** | **15** | 63 / 331 / 64 | **75.2 km/h** | **90.0 km/h** | [GIF](visualizations/top10/ppo_top_2_seed_3115.gif) | [MP4](visualizations/top10/ppo_top_2_seed_3115.mp4) |
+| **#3** | **3010** | **4** | **3** | 40 / 423 / 32 | **84.0 km/h** | **108.0 km/h** | [GIF](visualizations/top10/ppo_top_3_seed_3010.gif) | [MP4](visualizations/top10/ppo_top_3_seed_3010.mp4) |
+| **#4** | **3000** | **1** | **11** | 47 / 389 / 47 | **74.4 km/h** | **90.0 km/h** | [GIF](visualizations/top10/ppo_top_4_seed_3000.gif) | [MP4](visualizations/top10/ppo_top_4_seed_3000.mp4) |
+| **#5** | **3019** | **1** | **14** | 12 / 445 / 10 | **76.5 km/h** | **100.3 km/h** | [GIF](visualizations/top10/ppo_top_5_seed_3019.gif) | [MP4](visualizations/top10/ppo_top_5_seed_3019.mp4) |
+| **#6** | **3092** | **2** | **3** | 27 / 444 / 24 | **78.4 km/h** | **107.9 km/h** | [GIF](visualizations/top10/ppo_top_6_seed_3092.gif) | [MP4](visualizations/top10/ppo_top_6_seed_3092.mp4) |
+| **#7** | **3078** | **1** | **3** | 40 / 414 / 40 | **76.2 km/h** | **105.7 km/h** | [GIF](visualizations/top10/ppo_top_7_seed_3078.gif) | [MP4](visualizations/top10/ppo_top_7_seed_3078.mp4) |
+| **#8** | **3028** | **1** | **6** | 17 / 453 / 17 | **73.8 km/h** | **90.0 km/h** | [GIF](visualizations/top10/ppo_top_8_seed_3028.gif) | [MP4](visualizations/top10/ppo_top_8_seed_3028.mp4) |
+| **#9** | **2010** | **1** | **5** | 20 / 452 / 20 | **76.4 km/h** | **107.9 km/h** | [GIF](visualizations/top10/ppo_top_9_seed_2010.gif) | [MP4](visualizations/top10/ppo_top_9_seed_2010.mp4) |
+| **#10** | **3049** | **1** | **3** | 36 / 423 / 35 | **73.4 km/h** | **90.7 km/h** | [GIF](visualizations/top10/ppo_top_10_seed_3049.gif) | [MP4](visualizations/top10/ppo_top_10_seed_3049.mp4) |
+
+#### Highlight: Rank #1 (Seed 3094: 5 Overtakes, 4 Lane Changes, 108 km/h Sprint)
+![Rank 1 Seed 3094](visualizations/top10/ppo_top_1_seed_3094.gif)
+
 ---
 
 ## 4. Repository Structure
 
 ```
 Capstone/
-├── .gitignore                      # Clean exclusion of temporary/venv/shelved files
+├── .gitignore                      # Clean exclusion of temporary/venv/scratch files
 ├── requirements.txt                # Pinned dependencies
-├── README.md                       # Round 1 documentation & benchmark summary
-├── benchmark_results.md            # Comprehensive quantitative benchmark report
-├── ultimate_comparison_results.json # Full numerical logs across all 30 test seeds
-├── env_config.py                   # Sensor tiers & TacticalOvertakingWrapper
-├── ppo.py                          # Feedforward PPO architecture and training pipeline
+├── README.md                       # Comprehensive documentation & quickstart
+├── benchmark_results.md            # Quantitative benchmark report
+├── env_config.py                   # Sensor tiers, wrappers, frame stacking, and anti-jitter reward
+├── train_optimal_overtaker.py      # End-to-end PPO trainer with anti-jitter and adjacent overtake bonuses
+├── ppo.py                          # Feedforward PPO architecture
 ├── ppo_lstm.py                     # Recurrent PPO (LSTM) with decoupled Actor-Critic
-├── baseline_classical.py           # Observation-driven IDM and IDM+MOBIL baselines
-├── run_comparison_benchmark.py     # Reproducible 30-seed automated benchmark suite
-├── record_visual_driving.py        # Telemetry HUD renderer exporting MP4 & GIF
-├── models/                         # Trained model checkpoints
+├── baseline_classical.py           # Classical IDM car-following and MOBIL lane-changing controllers
+├── record_optimal_overtaker.py     # High-definition telemetry HUD episode recorder
+├── render_top10.py                 # Telemetry renderer for top demonstration episodes
+├── run_batch_render.py             # Automated batch rendering script for Top 10 seeds
+├── run_comparison_benchmark.py     # 30-seed automated benchmark suite
+├── record_visual_driving.py        # Multi-model visual driving recorder
+├── models/                         # Checkpoints for PPO, PPO-LSTM, and Optimal Overtaker
+│   ├── ppo_optimal_overtaker_4lane_best.pt
+│   ├── ppo_optimal_overtaker_4lane.pt
 │   ├── ppo_highway_full_adas_seed101.pt
 │   ├── ppo_highway_front_only_seed101.pt
 │   ├── ppo_lstm_highway_full_adas_seed101.pt
 │   └── ppo_lstm_highway_front_only_seed101.pt
-└── visualizations/                 # 12 MP4 videos and 12 animated GIFs with telemetry
+└── visualizations/                 # Generated GIFs and MP4 videos with telemetry HUD
+    ├── top10/                      # Top 10 non-idle overtaking and avoidance runs (GIF + MP4)
+    │   ├── manifest.json           # Telemetry metrics manifest across all 10 runs
+    │   ├── ppo_top_1_seed_3094.gif / .mp4
+    │   └── ...
     ├── classical_idm_*.mp4 / .gif
     ├── classical_mobil_*.mp4 / .gif
     ├── ppo_*.mp4 / .gif
@@ -130,23 +162,37 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 5.2 Running the Full 30-Seed Benchmark Suite
-To re-evaluate all 4 models across both sensor tiers across seeds 2000–2029:
+### 5.2 Train the Optimal Tactical Overtaker (PPO)
+To train the 4-lane anti-jitter overtaking policy from scratch:
 ```bash
-python run_comparison_benchmark.py
+python train_optimal_overtaker.py --total-timesteps 1000000 --device cuda
+```
+Checkpoints will be saved automatically to `models/ppo_optimal_overtaker_4lane_best.pt`.
+
+### 5.3 Render & Record Any Optimal Driving Episode
+To evaluate and record an episode with full real-time telemetry HUD overlay (saved as both `.gif` and `.mp4`):
+```bash
+# Record Rank #1 episode (Seed 3094, 5 overtakes, 108 km/h)
+python record_optimal_overtaker.py --seed 3094 --steps 500
+
+# Record Rank #2 episode (Seed 3115, 15 lane changes)
+python record_optimal_overtaker.py --seed 3115 --steps 500
 ```
 
-### 5.3 Recording Driving Episodes with Telemetry HUD
-To record an episode and generate high-definition GIF and MP4 outputs:
+### 5.4 Batch Render the Top 10 Demonstrations
+To batch render all Top 10 non-idle overtaking seeds to `visualizations/top10/`:
 ```bash
-# Record Classical MOBIL under Front-Only Radar (demonstrating cut-in failure)
-python record_visual_driving.py --agent classical_mobil --tier front_only --seed 2002
+python run_batch_render.py
+```
 
-# Record Recurrent PPO under Front-Only Radar
-python record_visual_driving.py --agent ppo_lstm --tier front_only --seed 2015
+### 5.5 Classical Baselines & Sensor Ablation Benchmark
+To run the classical IDM/MOBIL heuristic baselines and evaluate performance across the 30-seed benchmark:
+```bash
+# Run classical baselines standalone
+python baseline_classical.py
 
-# Record Feedforward PPO under Full ADAS
-python record_visual_driving.py --agent ppo --tier full_adas --seed 2015
+# Run comparative benchmark suite across models and sensor tiers
+python run_comparison_benchmark.py
 ```
 
 ---

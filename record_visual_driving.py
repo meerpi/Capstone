@@ -7,6 +7,8 @@ Fixes headless offscreen rendering to prevent black screens caused by SDL dummy 
 
 import os
 import subprocess
+import uuid
+import concurrent.futures
 import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
@@ -67,7 +69,7 @@ def get_rendered_frame(env) -> np.ndarray:
     return frame
 
 
-def save_video_artifacts(frames: list[Image.Image], output_gif: str, output_mp4: str | None, fps: int = 10) -> None:
+def save_video_artifacts(frames: list[Image.Image], output_gif: str, output_mp4: str | None, fps: int = 20) -> None:
     """Save captured frames to optimized GIF and universally playable H.264 MP4."""
     if not frames:
         print("Warning: No frames to save.")
@@ -85,12 +87,12 @@ def save_video_artifacts(frames: list[Image.Image], output_gif: str, output_mp4:
             loop=0,
             optimize=True,
         )
-        print(f"Saved animated GIF: {output_gif} ({len(frames)} frames)")
+        print(f"Saved animated GIF: {output_gif} ({len(frames)} frames at {fps} FPS)")
 
     # 2. Save MP4 with 2x nearest-neighbor scaling for high-definition clarity
     if output_mp4:
         os.makedirs(os.path.dirname(os.path.abspath(output_mp4)), exist_ok=True)
-        temp_dir = f"/tmp/render_frames_{os.getpid()}"
+        temp_dir = f"/tmp/render_frames_{os.getpid()}_{uuid.uuid4().hex[:8]}"
         os.makedirs(temp_dir, exist_ok=True)
         temp_pattern = os.path.join(temp_dir, "frame_%04d.png")
 
@@ -112,7 +114,7 @@ def save_video_artifacts(frames: list[Image.Image], output_gif: str, output_mp4:
             output_mp4,
         ]
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        print(f"Saved MP4 video: {output_mp4}")
+        print(f"Saved MP4 video: {output_mp4} ({len(frames)} frames at {fps} FPS)")
 
         # Clean up temporary frames
         for i in range(len(frames)):
@@ -133,7 +135,7 @@ def record_episode(
     output_gif: str = "visualizations/ppo_lstm_front_only_seed2015.gif",
     output_mp4: str | None = "visualizations/ppo_lstm_front_only_seed2015.mp4",
     device_name: str = "cpu",
-    fps: int = 10,
+    fps: int = 20,
     max_steps: int = 500,
 ) -> dict:
     device = torch.device(device_name)
@@ -227,7 +229,7 @@ def record_ppo_episode(
     output_gif: str = "visualizations/ppo_front_only_seed2015.gif",
     output_mp4: str | None = "visualizations/ppo_front_only_seed2015.mp4",
     device_name: str = "cpu",
-    fps: int = 10,
+    fps: int = 20,
     max_steps: int = 500,
 ) -> dict:
     """Record an episode of trained Feedforward PPO and export to GIF and MP4."""
@@ -317,7 +319,7 @@ def record_classical_episode(
     use_mobil: bool = True,
     output_gif: str = "visualizations/classical_mobil_front_only_seed2002.gif",
     output_mp4: str | None = "visualizations/classical_mobil_front_only_seed2002.mp4",
-    fps: int = 10,
+    fps: int = 20,
     max_steps: int = 500,
 ) -> dict:
     """Record a Classical IDM or IDM+MOBIL episode and export to GIF/MP4."""
@@ -391,51 +393,126 @@ def record_classical_episode(
     }
 
 
+def run_recording_job(job: dict) -> dict:
+    """Execute a single episode recording job, suitable for concurrent execution."""
+    import time
+    start_t = time.time()
+    agent_type = job["agent"]
+    tier = job["tier"]
+    seed = job["seed"]
+    max_steps = job.get("max_steps", 500)
+    fps = job.get("fps", 20)
+    output_gif = job["gif"]
+    output_mp4 = job["mp4"]
+    device_name = job.get("device_name", "cpu")
+
+    print(f"[START] Rendering {agent_type} ({tier}, seed {seed}) at {fps} FPS -> {output_gif}")
+
+    if agent_type in ("classical_mobil", "classical_idm"):
+        res = record_classical_episode(
+            tier=tier,
+            seed=seed,
+            use_mobil=(agent_type == "classical_mobil"),
+            output_gif=output_gif,
+            output_mp4=output_mp4,
+            fps=fps,
+            max_steps=max_steps,
+        )
+    elif agent_type == "ppo":
+        model_path = f"models/ppo_highway_{tier}_seed101.pt"
+        res = record_ppo_episode(
+            model_path=model_path,
+            tier=tier,
+            seed=seed,
+            output_gif=output_gif,
+            output_mp4=output_mp4,
+            device_name=device_name,
+            fps=fps,
+            max_steps=max_steps,
+        )
+    elif agent_type == "ppo_lstm":
+        model_path = f"models/ppo_lstm_highway_{tier}_seed101.pt"
+        res = record_episode(
+            model_path=model_path,
+            tier=tier,
+            seed=seed,
+            output_gif=output_gif,
+            output_mp4=output_mp4,
+            device_name=device_name,
+            fps=fps,
+            max_steps=max_steps,
+        )
+    else:
+        raise ValueError(f"Unknown agent type: {agent_type}")
+
+    elapsed = time.time() - start_t
+    res["agent"] = agent_type
+    res["tier"] = tier
+    res["seed"] = seed
+    res["fps"] = fps
+    res["elapsed_sec"] = round(elapsed, 2)
+    print(f"[DONE] {agent_type} ({tier}, seed {seed}) in {elapsed:.1f}s | steps={res['steps']}, overtakes={res['overtakes']}, crashed={res['crashed']}")
+    return res
+
+
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser()
+    import multiprocessing as mp
+
+    parser = argparse.ArgumentParser(description="Multi-core visual driving renderer with telemetry overlays.")
     parser.add_argument("--agent", type=str, default="ppo_lstm", choices=["ppo", "ppo_lstm", "classical_mobil", "classical_idm"])
     parser.add_argument("--tier", type=str, default="front_only")
     parser.add_argument("--seed", type=int, default=2015)
     parser.add_argument("--max_steps", type=int, default=500)
+    parser.add_argument("--fps", type=int, default=20, help="Playback FPS (default: 20 for fast, dynamic playback)")
+    parser.add_argument("--workers", type=int, default=8, help="Number of parallel worker processes (default: 8)")
+    parser.add_argument("--all", action="store_true", help="Render all standard benchmark episodes in parallel across CPU cores")
     parser.add_argument("--gif", type=str, default=None)
     parser.add_argument("--mp4", type=str, default=None)
     args = parser.parse_args()
 
-    if args.agent in ("classical_mobil", "classical_idm"):
-        prefix = "classical_mobil" if args.agent == "classical_mobil" else "classical_idm"
-        gif_path = args.gif or f"visualizations/{prefix}_{args.tier}_seed{args.seed}.gif"
-        mp4_path = args.mp4 or f"visualizations/{prefix}_{args.tier}_seed{args.seed}.mp4"
-        res = record_classical_episode(
-            tier=args.tier,
-            seed=args.seed,
-            use_mobil=(args.agent == "classical_mobil"),
-            output_gif=gif_path,
-            output_mp4=mp4_path,
-            max_steps=args.max_steps,
-        )
-    elif args.agent == "ppo":
-        gif_path = args.gif or f"visualizations/ppo_{args.tier}_seed{args.seed}.gif"
-        mp4_path = args.mp4 or f"visualizations/ppo_{args.tier}_seed{args.seed}.mp4"
-        model_path = f"models/ppo_highway_{args.tier}_seed101.pt"
-        res = record_ppo_episode(
-            model_path=model_path,
-            tier=args.tier,
-            seed=args.seed,
-            output_gif=gif_path,
-            output_mp4=mp4_path,
-            max_steps=args.max_steps,
-        )
+    if args.all:
+        benchmark_jobs = [
+            {"agent": "ppo", "tier": "full_adas", "seed": 2015, "gif": "visualizations/ppo_full_adas_seed2015.gif", "mp4": "visualizations/ppo_full_adas_seed2015.mp4"},
+            {"agent": "ppo", "tier": "front_only", "seed": 2015, "gif": "visualizations/ppo_front_only_seed2015.gif", "mp4": "visualizations/ppo_front_only_seed2015.mp4"},
+            {"agent": "ppo", "tier": "full_adas", "seed": 2002, "gif": "visualizations/ppo_full_adas_seed2002.gif", "mp4": "visualizations/ppo_full_adas_seed2002.mp4"},
+            {"agent": "ppo", "tier": "front_only", "seed": 2002, "gif": "visualizations/ppo_front_only_seed2002.gif", "mp4": "visualizations/ppo_front_only_seed2002.mp4"},
+            {"agent": "ppo_lstm", "tier": "full_adas", "seed": 2015, "gif": "visualizations/ppo_lstm_full_adas_seed2015.gif", "mp4": "visualizations/ppo_lstm_full_adas_seed2015.mp4"},
+            {"agent": "ppo_lstm", "tier": "front_only", "seed": 2015, "gif": "visualizations/ppo_lstm_front_only_seed2015.gif", "mp4": "visualizations/ppo_lstm_front_only_seed2015.mp4"},
+            {"agent": "classical_mobil", "tier": "full_adas", "seed": 2002, "gif": "visualizations/classical_mobil_full_adas_seed2002.gif", "mp4": "visualizations/classical_mobil_full_adas_seed2002.mp4"},
+            {"agent": "classical_mobil", "tier": "front_only", "seed": 2002, "gif": "visualizations/classical_mobil_front_only_seed2002.gif", "mp4": "visualizations/classical_mobil_front_only_seed2002.mp4"},
+            {"agent": "classical_idm", "tier": "full_adas", "seed": 2002, "gif": "visualizations/classical_idm_full_adas_seed2002.gif", "mp4": "visualizations/classical_idm_full_adas_seed2002.mp4"},
+            {"agent": "classical_idm", "tier": "front_only", "seed": 2002, "gif": "visualizations/classical_idm_front_only_seed2002.gif", "mp4": "visualizations/classical_idm_front_only_seed2002.mp4"},
+        ]
+        for job in benchmark_jobs:
+            job["fps"] = args.fps
+            job["max_steps"] = args.max_steps
+
+        print(f"Launching {len(benchmark_jobs)} benchmark rendering jobs across {args.workers} CPU cores (fps={args.fps})...")
+        results = []
+        with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as executor:
+            futures = {executor.submit(run_recording_job, job): job for job in benchmark_jobs}
+            for fut in concurrent.futures.as_completed(futures):
+                try:
+                    res = fut.result()
+                    results.append(res)
+                except Exception as exc:
+                    job_info = futures[fut]
+                    print(f"Job {job_info['agent']} ({job_info['tier']}) generated an exception: {exc}")
+
+        print(f"\nAll {len(results)}/{len(benchmark_jobs)} benchmark rendering jobs completed successfully.")
     else:
-        gif_path = args.gif or f"visualizations/ppo_lstm_{args.tier}_seed{args.seed}.gif"
-        mp4_path = args.mp4 or f"visualizations/ppo_lstm_{args.tier}_seed{args.seed}.mp4"
-        model_path = f"models/ppo_lstm_highway_{args.tier}_seed101.pt"
-        res = record_episode(
-            model_path=model_path,
-            tier=args.tier,
-            seed=args.seed,
-            output_gif=gif_path,
-            output_mp4=mp4_path,
-            max_steps=args.max_steps,
-        )
-    print(f"Result: {res}")
+        prefix = args.agent
+        default_gif = f"visualizations/{prefix}_{args.tier}_seed{args.seed}.gif"
+        default_mp4 = f"visualizations/{prefix}_{args.tier}_seed{args.seed}.mp4"
+        single_job = {
+            "agent": args.agent,
+            "tier": args.tier,
+            "seed": args.seed,
+            "max_steps": args.max_steps,
+            "fps": args.fps,
+            "gif": args.gif or default_gif,
+            "mp4": args.mp4 or default_mp4,
+        }
+        res = run_recording_job(single_job)
+        print(f"Result: {res}")
