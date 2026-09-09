@@ -1,7 +1,6 @@
 # Comprehensive Project Chronicle, Technical Trajectory & Post-Mortem: Sensor-Budgeted Autonomous Highway Driving & Tactical Overtaking
 
 **Project Repository:** [github.com/meerpi/Capstone](https://github.com/meerpi/Capstone)  
-**Author / Engineering Lead:** Aritra Mahanty  
 **Date:** September 2026  
 **Scope:** Autonomous Highway Driving Benchmark, Sensor Degradation Analysis, Deep RL (PPO / PPO-LSTM) vs. Classical Heuristics (IDM / MOBIL), Anti-Jitter Motion Planning, and Long-Horizon Overtaking Demonstrations.
 
