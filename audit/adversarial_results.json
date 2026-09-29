@@ -1,0 +1,80 @@
+{
+  "probe_1_reversing": {
+    "min_speed": -40.288888888888884,
+    "final_speed": -40.000146484069354,
+    "crashed": false,
+    "total_return": 1.3333333333333406,
+    "vulnerability": "Vehicle can reverse into negative speed (MIN_SPEED = -40 m/s); receives 0 speed reward, but avoids all downstream forward traffic."
+  },
+  "probe_2_parking": {
+    "steps_alive": 100,
+    "final_speed": 2.0761170560490427e-14,
+    "total_return": 1.3145833333333403,
+    "vulnerability": "Vehicle incurs zero headway penalty at v=0 (if empty ahead) and avoids all collision risk with zero control effort."
+  },
+  "probe_3_straddle": {
+    "ego_lane_index": "('0', '1', 0)",
+    "discrete_front_detected": false,
+    "vulnerability": "Discrete TacticalOvertakingWrapper relies strictly on ego.lane_index; an obstacle in an adjacent lane directly in ego path is ignored if ego lane index doesn't match."
+  },
+  "probe_4_offroad_grazing": {
+    "offroad_steps": 40,
+    "terminated_offroad": false,
+    "vulnerability": "offroad_terminal is False in default highway-fast-v0; ego can drive in the grass indefinitely without episode termination unless it hits a vehicle."
+  },
+  "probe_5_dwell_flicker": {
+    "dwell_sequence": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "dwell_after_flip": 0,
+    "credited": false,
+    "finding": "Overtake dwell correctly resets to 0 when vehicle position flips; no false credit awarded for 4-step flicker."
+  },
+  "probe_6_tailgating_at_hmin": {
+    "reward_headway": 0.0,
+    "finding": "Sharp step boundary at headway_min=1.0s: tailgating at 1.001s receives 0.0 penalty despite zero reaction buffer under discrete 0.2s control steps."
+  },
+  "probe_7_speed_matching_zero_ttc": {
+    "reward_ttc": 0.0,
+    "reward_headway": -0.276,
+    "finding": "Because TTC is closing-only (v_rel > 0), an agent tailgating at only 2 meters receives reward_ttc = 0.0 by matching speed with lead vehicle (partially mitigated by headway penalty)."
+  },
+  "probe_8_provoking_slowdowns": {
+    "mechanism": "IDM deceleration response to cut-in",
+    "finding": "Ego cutting into lane immediately slows trailing vehicle. However, each vehicle can only be credited ONCE per episode due to credited_overtakes set, eliminating repetitive farming on the same vehicle."
+  },
+  "probe_9_steady_high_yaw": {
+    "reward_jerk": -0.0,
+    "reward_control": -0.0,
+    "vulnerability": "Reward function lacks an explicit heading error penalty (R_heading); holding extreme steering angle steadily incurs zero jerk and zero control penalty!"
+  },
+  "probe_10_end_of_horizon": {
+    "mechanism": "Absence of truncation bootstrapping in PPO (B7)",
+    "finding": "Because truncations are treated as terminal (dones=1), V(s_500)=0. Near the horizon, policy has no incentive to maintain heading/lane stability beyond step 500."
+  },
+  "probe_11_clip_saturation": {
+    "raw_control_norm": -1.0,
+    "raw_jerk_norm": -1.0,
+    "finding": "Both control penalty and jerk penalty are clipped cleanly to [-1.0, 0.0], preventing gradient explosions during sudden bang-bang saturation."
+  },
+  "probe_12_evaluation_circularity": {
+    "mechanism": "info['overtake_count'] derived from wrapper internal state",
+    "finding": "Evaluation scripts read info['overtake_count'] directly from the environment wrapper rather than an independent metric recorder; any counting glitch in the wrapper is faithfully mirrored into benchmark logs."
+  },
+  "probe_13_trailing_traffic_blindness": {
+    "reward_ttc": 0.0,
+    "reward_headway": 0.0,
+    "vulnerability": "Reward function only monitors lead obstacles (dx > 0); fast-approaching trailing vehicles closing in from behind produce zero warning penalty."
+  },
+  "probe_14_offroad_no_crash": {
+    "crashed": false,
+    "on_road": "False",
+    "finding": "Driving off the road into open space does not set crashed=True; unless offroad_terminal is explicitly set, the episode continues."
+  },
+  "probe_15_two_step_jitter": {
+    "finding": "2-step holding cuts discrete jitter penalty by 50% while still achieving effective PWM speed regulation."
+  }
+}

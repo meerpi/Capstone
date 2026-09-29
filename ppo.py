@@ -211,6 +211,9 @@ def train_ppo(args: argparse.Namespace) -> str:
     masks = torch.zeros(
         (args.num_steps, args.num_envs, action_dim), dtype=torch.bool, device=device
     )
+    terms = torch.zeros((args.num_steps, args.num_envs), device=device)
+    truncs = torch.zeros((args.num_steps, args.num_envs), device=device)
+    trunc_bootstrap_values = torch.zeros((args.num_steps, args.num_envs), device=device)
 
     global_step = 0
     start_time = time.time()
@@ -221,6 +224,31 @@ def train_ppo(args: argparse.Namespace) -> str:
         "action_mask", np.ones((args.num_envs, action_dim), dtype=bool)
     )
     next_mask = torch.tensor(init_mask, dtype=torch.bool, device=device)
+
+    # Resume support (D1-1)
+    start_iteration = 1
+    last_save_step = 0
+    if getattr(args, "resume", None) and os.path.exists(args.resume):
+        ckpt_data = torch.load(args.resume, map_location=device, weights_only=False)
+        agent.load_state_dict(ckpt_data["model_state_dict"])
+        if "optimizer_actor_state_dict" in ckpt_data:
+            opt_actor.load_state_dict(ckpt_data["optimizer_actor_state_dict"])
+        if "optimizer_critic_state_dict" in ckpt_data:
+            opt_critic.load_state_dict(ckpt_data["optimizer_critic_state_dict"])
+        global_step = ckpt_data.get("global_step", 0)
+        start_iteration = ckpt_data.get("iteration", 0) + 1
+        last_save_step = global_step
+        if "rng_state" in ckpt_data:
+            rng = ckpt_data["rng_state"]
+            if "torch" in rng and rng["torch"] is not None:
+                torch.set_rng_state(rng["torch"].cpu())
+            if "cuda" in rng and rng["cuda"] is not None and torch.cuda.is_available():
+                torch.cuda.set_rng_state_all(rng["cuda"])
+            if "numpy" in rng and rng["numpy"] is not None:
+                np.random.set_state(rng["numpy"])
+            if "python" in rng and rng["python"] is not None:
+                random.setstate(rng["python"])
+        print(f"✓ Resumed PPO from step {global_step} (iteration {start_iteration - 1})", flush=True)
 
     print(
         f"--- Training PPO: scenario={args.scenario}, tier={args.tier} ---",
@@ -233,7 +261,7 @@ def train_ppo(args: argparse.Namespace) -> str:
         flush=True,
     )
 
-    for iteration in range(1, num_iterations + 1):
+    for iteration in range(start_iteration, num_iterations + 1):
         if args.anneal_lr:
             frac = 1.0 - (iteration - 1.0) / num_iterations
             lrnow = frac * args.learning_rate
@@ -260,6 +288,23 @@ def train_ppo(args: argparse.Namespace) -> str:
                 action_np
             )
             next_done_np = np.logical_or(terminations, truncations)
+
+            terms[step] = torch.tensor(terminations, dtype=torch.float32, device=device)
+            truncs[step] = torch.tensor(truncations, dtype=torch.float32, device=device)
+
+            if getattr(args, "bootstrap_truncation", False):
+                is_trunc = np.logical_and(truncations, np.logical_not(terminations))
+                if np.any(is_trunc):
+                    for env_idx in np.where(is_trunc)[0]:
+                        if "final_obs" in infos and infos.get("_final_obs", [False] * args.num_envs)[env_idx]:
+                            final_o = infos["final_obs"][env_idx]
+                        elif "final_observation" in infos and infos.get("_final_observation", [False] * args.num_envs)[env_idx]:
+                            final_o = infos["final_observation"][env_idx]
+                        else:
+                            final_o = step_obs[env_idx]
+                        final_o_t = torch.tensor(final_o, dtype=torch.float32, device=device).unsqueeze(0)
+                        with torch.no_grad():
+                            trunc_bootstrap_values[step, env_idx] = agent.get_value(final_o_t).squeeze()
 
             rewards[step] = torch.tensor(
                 step_reward, dtype=torch.float32, device=device
@@ -290,21 +335,49 @@ def train_ppo(args: argparse.Namespace) -> str:
             advantages = torch.zeros_like(rewards, device=device)
             lastgaelam = 0.0
             for t in reversed(range(args.num_steps)):
-                if t == args.num_steps - 1:
-                    nextnonterminal = 1.0 - next_done
-                    nextvalues = next_value
+                if getattr(args, "bootstrap_truncation", False):
+                    # Truncation Bootstrapping (B7-1 fix)
+                    if t == args.num_steps - 1:
+                        is_term = terms[t]
+                        is_trunc = truncs[t]
+                        nextnonterminal = 1.0 - is_term
+                        nextvalues = torch.where(
+                            (is_trunc.bool() & ~is_term.bool()),
+                            trunc_bootstrap_values[t],
+                            next_value.squeeze(0),
+                        )
+                        nextnoncutoff = 1.0 - torch.clamp(is_term + is_trunc, 0.0, 1.0)
+                    else:
+                        is_term = terms[t]
+                        is_trunc = truncs[t]
+                        nextnonterminal = 1.0 - is_term
+                        nextvalues = torch.where(
+                            (is_trunc.bool() & ~is_term.bool()),
+                            trunc_bootstrap_values[t],
+                            values[t + 1],
+                        )
+                        nextnoncutoff = 1.0 - torch.clamp(is_term + is_trunc, 0.0, 1.0)
+
+                    delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
+                    advantages[t] = lastgaelam = (
+                        delta + args.gamma * args.gae_lambda * nextnoncutoff * lastgaelam
+                    )
                 else:
-                    nextnonterminal = 1.0 - dones[t + 1]
-                    nextvalues = values[t + 1]
-                delta = (
-                    rewards[t]
-                    + args.gamma * nextvalues * nextnonterminal
-                    - values[t]
-                )
-                advantages[t] = lastgaelam = (
-                    delta
-                    + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
-                )
+                    if t == args.num_steps - 1:
+                        nextnonterminal = 1.0 - next_done
+                        nextvalues = next_value
+                    else:
+                        nextnonterminal = 1.0 - dones[t + 1]
+                        nextvalues = values[t + 1]
+                    delta = (
+                        rewards[t]
+                        + args.gamma * nextvalues * nextnonterminal
+                        - values[t]
+                    )
+                    advantages[t] = lastgaelam = (
+                        delta
+                        + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                    )
             returns = advantages + values
 
         # Flatten rollout batch
@@ -407,9 +480,36 @@ def train_ppo(args: argparse.Namespace) -> str:
                 flush=True,
             )
 
+        # Checkpointing (D1-1)
+        if getattr(args, "checkpoint_dir", None) and (global_step - last_save_step >= getattr(args, "save_frequency", 50000)):
+            os.makedirs(args.checkpoint_dir, exist_ok=True)
+            ckpt_data = {
+                "model_state_dict": agent.state_dict(),
+                "optimizer_actor_state_dict": opt_actor.state_dict(),
+                "optimizer_critic_state_dict": opt_critic.state_dict(),
+                "global_step": global_step,
+                "iteration": iteration,
+                "obs_dim": obs_dim,
+                "action_dim": action_dim,
+                "args": vars(args),
+                "rng_state": {
+                    "torch": torch.get_rng_state(),
+                    "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+                    "numpy": np.random.get_state(),
+                    "python": random.getstate(),
+                },
+            }
+            step_ckpt_path = os.path.join(args.checkpoint_dir, f"checkpoint_step_{global_step}.pt")
+            latest_ckpt_path = os.path.join(args.checkpoint_dir, "checkpoint_latest.pt")
+            torch.save(ckpt_data, step_ckpt_path)
+            torch.save(ckpt_data, latest_ckpt_path)
+            last_save_step = global_step
+            print(f"✓ Checkpoint saved: {step_ckpt_path} (step {global_step})", flush=True)
+
         if iteration % 25 == 0:
-            os.makedirs("models", exist_ok=True)
-            ckpt_path = f"models/ppo_{args.scenario}_{args.tier}_seed{args.seed}.pt"
+            val_dir = getattr(args, "checkpoint_dir", None) or "scratch/checkpoints"
+            os.makedirs(val_dir, exist_ok=True)
+            ckpt_path = os.path.join(val_dir, f"val_ppo_{args.scenario}_{args.tier}_seed{args.seed}.pt")
             torch.save(agent.state_dict(), ckpt_path)
             quick_val = evaluate_ppo_policy(
                 ckpt_path,
@@ -430,9 +530,34 @@ def train_ppo(args: argparse.Namespace) -> str:
     envs.close()
     writer.close()
 
-    os.makedirs("models", exist_ok=True)
-    model_path = f"models/ppo_{args.scenario}_{args.tier}_seed{args.seed}.pt"
-    torch.save(agent.state_dict(), model_path)
+    # Tooling fix: Guard canonical models/ directory against dry-runs / smoke-tests
+    if getattr(args, "output_path", None) is not None:
+        model_path = args.output_path
+    elif getattr(args, "total_timesteps", 1200000) < 100000 or getattr(args, "dry_run", False):
+        os.makedirs("scratch/checkpoints", exist_ok=True)
+        model_path = f"scratch/checkpoints/ppo_{args.scenario}_{args.tier}_seed{args.seed}.pt"
+    else:
+        os.makedirs("models", exist_ok=True)
+        model_path = f"models/ppo_{args.scenario}_{args.tier}_seed{args.seed}.pt"
+
+    ckpt_to_save = {
+        "model_state_dict": agent.state_dict(),
+        "optimizer_actor_state_dict": opt_actor.state_dict(),
+        "optimizer_critic_state_dict": opt_critic.state_dict(),
+        "obs_dim": obs_dim,
+        "action_dim": action_dim,
+        "iteration": num_iterations,
+        "global_step": global_step,
+        "args": vars(args),
+        "rng_state": {
+            "torch": torch.get_rng_state(),
+            "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+            "numpy": np.random.get_state(),
+            "python": random.getstate(),
+        },
+    }
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    torch.save(ckpt_to_save, model_path)
     print(f"Checkpoint saved successfully: {model_path}", flush=True)
     return model_path
 
@@ -460,18 +585,52 @@ def evaluate_ppo_policy(
     Returns:
         Dictionary of summary evaluation statistics.
     """
+    raw_ckpt = torch.load(model_path, map_location=device, weights_only=False)
+    state_dict = (
+        raw_ckpt["model_state_dict"]
+        if isinstance(raw_ckpt, dict) and "model_state_dict" in raw_ckpt
+        else raw_ckpt
+    )
+
+    if isinstance(raw_ckpt, dict) and "obs_dim" in raw_ckpt:
+        ckpt_obs_dim = raw_ckpt["obs_dim"]
+    elif "actor.0.weight" in state_dict:
+        ckpt_obs_dim = state_dict["actor.0.weight"].shape[1]
+    elif "critic.0.weight" in state_dict:
+        ckpt_obs_dim = state_dict["critic.0.weight"].shape[1]
+    else:
+        ckpt_obs_dim = 75
+
+    env_overrides: dict[str, Any] = {}
+    if ckpt_obs_dim == 50:
+        env_overrides["observation"] = {"vehicles_count": 10}
+        env_overrides["vehicles_count"] = 10
+        env_overrides["vehicles_density"] = 1.0
+        env_overrides["duration"] = 40
+        obs_dim = 50
+    elif ckpt_obs_dim == 75:
+        env_overrides["observation"] = {"vehicles_count": 15}
+        env_overrides["vehicles_count"] = 14
+        env_overrides["vehicles_density"] = 1.4
+        env_overrides["duration"] = 100
+        obs_dim = 75
+    else:
+        dummy_env = env_config.make_env(scenario=scenario, tier=tier, seed=0)
+        obs_dim = int(np.prod(dummy_env.observation_space.shape))
+        dummy_env.close()
+
     env = env_config.make_env(
         scenario=scenario,
         tier=tier,
         seed=seed_start,
         tactical_overtaking=True,
+        **env_overrides,
     )
     obs_shape = env.observation_space.shape
     obs_dim = int(np.prod(obs_shape))
     action_dim = int(env.action_space.n)
 
     agent = Agent(obs_dim=obs_dim, action_dim=action_dim).to(device)
-    state_dict = torch.load(model_path, map_location=device)
     agent.load_state_dict(state_dict)
     agent.eval()
 
@@ -482,6 +641,14 @@ def evaluate_ppo_policy(
 
     for ep in range(episodes):
         seed = seed_start + ep
+        if ep > 0:
+            env = env_config.make_env(
+                scenario=scenario,
+                tier=tier,
+                seed=seed,
+                tactical_overtaking=True,
+                **env_overrides,
+            )
         obs, info = env.reset(seed=seed)
         ep_steps = 0
         ep_speeds: list[float] = []
@@ -609,6 +776,40 @@ def parse_args() -> argparse.Namespace:
         dest="async_envs",
         action="store_false",
         help="Use SyncVectorEnv instead of AsyncVectorEnv.",
+    )
+
+    # Truncation Bootstrapping (B7-1)
+    parser.add_argument(
+        "--bootstrap-truncation",
+        action="store_true",
+        default=False,
+        help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
+    )
+
+    # Checkpointing and Resuming (D1-1)
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default=None,
+        help="Directory to save periodic training checkpoints.",
+    )
+    parser.add_argument(
+        "--save-frequency",
+        type=int,
+        default=50000,
+        help="Save checkpoint every N environment steps.",
+    )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        help="Path to checkpoint from which to resume training.",
+    )
+    parser.add_argument(
+        "--output-path",
+        type=str,
+        default=None,
+        help="Explicit output path for model checkpoint.",
     )
 
     # Evaluation options

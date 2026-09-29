@@ -79,6 +79,44 @@ def parse_args() -> argparse.Namespace:
         "--max_grad_norm", type=float, default=0.5, help="Maximum gradient norm"
     )
     parser.add_argument("--cuda", type=bool, default=True, help="Toggle CUDA acceleration")
+    parser.add_argument(
+        "--bootstrap-truncation",
+        "--bootstrap_truncation",
+        dest="bootstrap_truncation",
+        action="store_true",
+        default=False,
+        help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        "--checkpoint_dir",
+        dest="checkpoint_dir",
+        type=str,
+        default=None,
+        help="Directory to save periodic training checkpoints (D1-1).",
+    )
+    parser.add_argument(
+        "--save-frequency",
+        "--save_frequency",
+        dest="save_frequency",
+        type=int,
+        default=50000,
+        help="Save checkpoint every N environment steps.",
+    )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        help="Path to checkpoint from which to resume training.",
+    )
+    parser.add_argument(
+        "--output-path",
+        "--output_path",
+        dest="output_path",
+        type=str,
+        default=None,
+        help="Explicit output path for model checkpoint.",
+    )
     return parser.parse_args()
 
 
@@ -356,6 +394,9 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
     masks_buf = torch.zeros(
         (args.num_steps, args.num_envs, action_dim), dtype=torch.bool, device=device
     )
+    terms_buf = torch.zeros((args.num_steps, args.num_envs), device=device)
+    truncs_buf = torch.zeros((args.num_steps, args.num_envs), device=device)
+    trunc_bootstrap_values = torch.zeros((args.num_steps, args.num_envs), device=device)
 
     global_step = 0
     start_time = time.time()
@@ -380,7 +421,32 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
         batch_size=args.num_envs, device=device
     )
 
-    for iteration in range(1, args.num_iterations + 1):
+    # Resume support (D1-1)
+    start_iteration = 1
+    last_save_step = 0
+    if getattr(args, "resume", None) and os.path.exists(args.resume):
+        ckpt_data = torch.load(args.resume, map_location=device, weights_only=False)
+        agent.load_state_dict(ckpt_data["model_state_dict"])
+        if "optimizer_actor_state_dict" in ckpt_data:
+            optimizer_actor.load_state_dict(ckpt_data["optimizer_actor_state_dict"])
+        if "optimizer_critic_state_dict" in ckpt_data:
+            optimizer_critic.load_state_dict(ckpt_data["optimizer_critic_state_dict"])
+        global_step = ckpt_data.get("global_step", 0)
+        start_iteration = ckpt_data.get("iteration", 0) + 1
+        last_save_step = global_step
+        if "rng_state" in ckpt_data:
+            rng = ckpt_data["rng_state"]
+            if "torch" in rng and rng["torch"] is not None:
+                torch.set_rng_state(rng["torch"].cpu())
+            if "cuda" in rng and rng["cuda"] is not None and torch.cuda.is_available():
+                torch.cuda.set_rng_state_all(rng["cuda"])
+            if "numpy" in rng and rng["numpy"] is not None:
+                np.random.set_state(rng["numpy"])
+            if "python" in rng and rng["python"] is not None:
+                random.setstate(rng["python"])
+        print(f"✓ Resumed PPO-LSTM from step {global_step} (iteration {start_iteration - 1})", flush=True)
+
+    for iteration in range(start_iteration, args.num_iterations + 1):
         # Cache initial states for T-BPTT minibatch chunking
         initial_actor_state = (
             next_actor_state[0].clone(),
@@ -427,6 +493,33 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
             next_obs_np, reward, term, trunc, info = envs.step(action.cpu().numpy())
             next_done_np = np.logical_or(term, trunc)
 
+            terms_buf[step] = torch.tensor(term, dtype=torch.float32, device=device)
+            truncs_buf[step] = torch.tensor(trunc, dtype=torch.float32, device=device)
+
+            if getattr(args, "bootstrap_truncation", False):
+                is_trunc = np.logical_and(trunc, np.logical_not(term))
+                if np.any(is_trunc):
+                    for env_idx in np.where(is_trunc)[0]:
+                        if "final_obs" in info and info.get("_final_obs", [False] * args.num_envs)[env_idx]:
+                            final_o = info["final_obs"][env_idx]
+                        elif "final_observation" in info and info.get("_final_observation", [False] * args.num_envs)[env_idx]:
+                            final_o = info["final_observation"][env_idx]
+                        else:
+                            final_o = next_obs_np[env_idx]
+
+                        final_o_t = torch.tensor(
+                            final_o.reshape(1, obs_dim), dtype=torch.float32, device=device
+                        )
+                        env_critic_state = (
+                            next_critic_state[0][:, env_idx : env_idx + 1],
+                            next_critic_state[1][:, env_idx : env_idx + 1],
+                        )
+                        dummy_done = torch.zeros(1, device=device)
+                        with torch.no_grad():
+                            trunc_bootstrap_values[step, env_idx] = agent.get_value(
+                                final_o_t, env_critic_state, dummy_done
+                            ).squeeze()
+
             rewards_buf[step] = torch.tensor(
                 reward, dtype=torch.float32, device=device
             ).view(-1)
@@ -456,21 +549,47 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
             advantages = torch.zeros_like(rewards_buf, device=device)
             lastgaelam = 0.0
             for t in reversed(range(args.num_steps)):
-                if t == args.num_steps - 1:
-                    nextnonterminal = 1.0 - next_done
-                    nextvalues = next_value
+                if getattr(args, "bootstrap_truncation", False):
+                    is_term = terms_buf[t]
+                    is_trunc = truncs_buf[t]
+                    nextnonterminal = 1.0 - is_term
+                    if t == args.num_steps - 1:
+                        nextvalues = torch.where(
+                            (is_trunc.bool() & ~is_term.bool()),
+                            trunc_bootstrap_values[t],
+                            next_value.squeeze(0),
+                        )
+                    else:
+                        nextvalues = torch.where(
+                            (is_trunc.bool() & ~is_term.bool()),
+                            trunc_bootstrap_values[t],
+                            values_buf[t + 1],
+                        )
+                    nextnoncutoff = 1.0 - torch.clamp(is_term + is_trunc, 0.0, 1.0)
+                    delta = (
+                        rewards_buf[t]
+                        + args.gamma * nextvalues * nextnonterminal
+                        - values_buf[t]
+                    )
+                    advantages[t] = lastgaelam = (
+                        delta + args.gamma * args.gae_lambda * nextnoncutoff * lastgaelam
+                    )
                 else:
-                    nextnonterminal = 1.0 - dones_buf[t + 1]
-                    nextvalues = values_buf[t + 1]
-                delta = (
-                    rewards_buf[t]
-                    + args.gamma * nextvalues * nextnonterminal
-                    - values_buf[t]
-                )
-                advantages[t] = lastgaelam = (
-                    delta
-                    + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
-                )
+                    if t == args.num_steps - 1:
+                        nextnonterminal = 1.0 - next_done
+                        nextvalues = next_value
+                    else:
+                        nextnonterminal = 1.0 - dones_buf[t + 1]
+                        nextvalues = values_buf[t + 1]
+                    delta = (
+                        rewards_buf[t]
+                        + args.gamma * nextvalues * nextnonterminal
+                        - values_buf[t]
+                    )
+                    advantages[t] = lastgaelam = (
+                        delta
+                        + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                    )
             returns = advantages + values_buf
 
         # Flatten buffers for batch indexing
@@ -583,9 +702,36 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
                 flush=True,
             )
 
+        # Checkpointing (D1-1)
+        if getattr(args, "checkpoint_dir", None) and (global_step - last_save_step >= getattr(args, "save_frequency", 50000)):
+            os.makedirs(args.checkpoint_dir, exist_ok=True)
+            ckpt_data = {
+                "model_state_dict": agent.state_dict(),
+                "optimizer_actor_state_dict": optimizer_actor.state_dict(),
+                "optimizer_critic_state_dict": optimizer_critic.state_dict(),
+                "global_step": global_step,
+                "iteration": iteration,
+                "obs_dim": obs_dim,
+                "action_dim": action_dim,
+                "args": vars(args),
+                "rng_state": {
+                    "torch": torch.get_rng_state(),
+                    "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+                    "numpy": np.random.get_state(),
+                    "python": random.getstate(),
+                },
+            }
+            step_ckpt_path = os.path.join(args.checkpoint_dir, f"checkpoint_step_{global_step}.pt")
+            latest_ckpt_path = os.path.join(args.checkpoint_dir, "checkpoint_latest.pt")
+            torch.save(ckpt_data, step_ckpt_path)
+            torch.save(ckpt_data, latest_ckpt_path)
+            last_save_step = global_step
+            print(f"✓ Checkpoint saved: {step_ckpt_path} (step {global_step})", flush=True)
+
         if iteration % 50 == 0:
-            os.makedirs("models", exist_ok=True)
-            ckpt_path = f"models/ppo_lstm_{args.scenario}_{args.tier}_seed{args.seed}.pt"
+            val_dir = getattr(args, "checkpoint_dir", None) or "scratch/checkpoints"
+            os.makedirs(val_dir, exist_ok=True)
+            ckpt_path = os.path.join(val_dir, f"val_ppo_lstm_{args.scenario}_{args.tier}_seed{args.seed}.pt")
             torch.save(agent.state_dict(), ckpt_path)
             quick_val = evaluate_ppo_lstm_policy(
                 ckpt_path, args.scenario, args.tier, episodes=5, seed_start=3000
@@ -601,9 +747,34 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
     envs.close()
     writer.close()
 
-    os.makedirs("models", exist_ok=True)
-    model_path = f"models/ppo_lstm_{args.scenario}_{args.tier}_seed{args.seed}.pt"
-    torch.save(agent.state_dict(), model_path)
+    # Tooling fix: Guard canonical models/ directory against dry-runs / smoke-tests
+    if getattr(args, "output_path", None) is not None:
+        model_path = args.output_path
+    elif getattr(args, "total_timesteps", 1200000) < 100000 or getattr(args, "dry_run", False):
+        os.makedirs("scratch/checkpoints", exist_ok=True)
+        model_path = f"scratch/checkpoints/ppo_lstm_{args.scenario}_{args.tier}_seed{args.seed}.pt"
+    else:
+        os.makedirs("models", exist_ok=True)
+        model_path = f"models/ppo_lstm_{args.scenario}_{args.tier}_seed{args.seed}.pt"
+
+    ckpt_to_save = {
+        "model_state_dict": agent.state_dict(),
+        "optimizer_actor_state_dict": optimizer_actor.state_dict(),
+        "optimizer_critic_state_dict": optimizer_critic.state_dict(),
+        "obs_dim": obs_dim,
+        "action_dim": action_dim,
+        "iteration": args.num_iterations,
+        "global_step": global_step,
+        "args": vars(args),
+        "rng_state": {
+            "torch": torch.get_rng_state(),
+            "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+            "numpy": np.random.get_state(),
+            "python": random.getstate(),
+        },
+    }
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    torch.save(ckpt_to_save, model_path)
     print(f"Checkpoint saved successfully: {model_path}", flush=True)
     return model_path
 
@@ -618,16 +789,51 @@ def evaluate_ppo_lstm_policy(
     """Evaluate trained Recurrent PPO on deterministic benchmark test seeds."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Load agent
-    dummy_env = env_config.make_env(scenario=scenario, tier=tier, seed=0)
-    obs_dim = int(np.prod(dummy_env.observation_space.shape))
+    # Infer expected observation dimension for Kinematics family (50 vs 75 dims)
+    raw_ckpt = torch.load(model_path, map_location=device, weights_only=False)
+    state_dict = (
+        raw_ckpt["model_state_dict"]
+        if isinstance(raw_ckpt, dict) and "model_state_dict" in raw_ckpt
+        else raw_ckpt
+    )
+
+    if isinstance(raw_ckpt, dict) and "obs_dim" in raw_ckpt:
+        ckpt_obs_dim = raw_ckpt["obs_dim"]
+    elif "actor.feature_net.0.weight" in state_dict:
+        ckpt_obs_dim = state_dict["actor.feature_net.0.weight"].shape[1]
+    elif "critic.feature_net.0.weight" in state_dict:
+        ckpt_obs_dim = state_dict["critic.feature_net.0.weight"].shape[1]
+    else:
+        ckpt_obs_dim = 75
+
+    env_overrides: dict[str, Any] = {}
+    if ckpt_obs_dim == 50:
+        env_overrides["observation"] = {"vehicles_count": 10}
+        env_overrides["vehicles_count"] = 10
+        env_overrides["vehicles_density"] = 1.0
+        env_overrides["duration"] = 40
+        obs_dim = 50
+    elif ckpt_obs_dim == 75:
+        env_overrides["observation"] = {"vehicles_count": 15}
+        env_overrides["vehicles_count"] = 14
+        env_overrides["vehicles_density"] = 1.4
+        env_overrides["duration"] = 100
+        obs_dim = 75
+    else:
+        dummy_env = env_config.make_env(scenario=scenario, tier=tier, seed=0)
+        obs_dim = int(np.prod(dummy_env.observation_space.shape))
+        dummy_env.close()
+
+    dummy_env = env_config.make_env(
+        scenario=scenario, tier=tier, seed=0, **env_overrides
+    )
     action_dim = dummy_env.action_space.n
     dummy_env.close()
 
     agent = RecurrentAgent(obs_dim=obs_dim, action_dim=action_dim, hidden_dim=128).to(
         device
     )
-    agent.load_state_dict(torch.load(model_path, map_location=device))
+    agent.load_state_dict(state_dict)
     agent.eval()
 
     crashes = 0
@@ -638,7 +844,11 @@ def evaluate_ppo_lstm_policy(
     for ep in range(episodes):
         test_seed = seed_start + ep
         env = env_config.make_env(
-            scenario=scenario, tier=tier, seed=test_seed, tactical_overtaking=True
+            scenario=scenario,
+            tier=tier,
+            seed=test_seed,
+            tactical_overtaking=True,
+            **env_overrides,
         )
         obs_np, info = env.reset(seed=test_seed)
 

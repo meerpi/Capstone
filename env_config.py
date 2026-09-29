@@ -357,14 +357,30 @@ class TacticalOvertakingWrapper(gym.Wrapper):
         return obs, shaped_reward, terminated, truncated, info
 
 
-class TacticalLaneObservationWrapper(gym.Wrapper):
-    """Structured lane-slot observation wrapper for tactical overtaking.
+def wrap_to_pi(x: float) -> float:
+    """Normalize an angle in radians to the interval [-pi, pi].
 
-    Produces a 27-dimensional observation vector organized from the driver's
-    tactical perspective:
+    Args:
+        x: Angle in radians.
+
+    Returns:
+        Normalized angle in [-pi, pi].
+    """
+    return float((x + np.pi) % (2.0 * np.pi) - np.pi)
+
+
+class TacticalLaneObservationWrapper(gym.Wrapper):
+    """Structured lane-slot observation wrapper for tactical overtaking and continuous control.
+
+    Produces a 30-dimensional observation vector (or 27-dimensional legacy vector)
+    organized from the driver's tactical and continuous control perspective:
     - Ego State (5): speed, target_speed, lane_position, can_left, can_right
     - Lane Slots (16): 4 lanes × (lead_dist, lead_dv, lag_dist, lag_dv)
     - Tactical Signals (6): is_blocked, left_safe, right_safe, left_adv, right_adv, ttc
+    - Continuous Control Stability Features (3):
+      - psi_err: heading error relative to current lane reference direction (normalized by pi/4)
+      - y_lane: lateral offset from current lane centerline (normalized by 4.0m lane width)
+      - yaw_rate: heading angular velocity dpsi/dt via finite difference (normalized by 1.0 rad/s)
 
     Also implements calibrated reward shaping:
     - Persistent blockage penalty (cannot be escaped by braking)
@@ -374,7 +390,9 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
     - Speed incentive scaled by (v - 20) / 10
     """
 
-    TACTICAL_OBS_DIM = 27
+    BASE_TACTICAL_OBS_DIM = 27
+    CONTINUOUS_FEATURES_DIM = 3
+    TACTICAL_OBS_DIM = 30
     NUM_LANES = 4
     MAX_LEAD_DIST = 100.0
     MAX_LAG_DIST = 100.0
@@ -384,6 +402,9 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
     SAFE_MARGIN = 18.0
     SPEED_NORM = 30.0
     TARGET_SPEED = 30.0
+    MAX_HEADING_ERROR = np.pi / 4.0  # 45 degrees in radians
+    MAX_LANE_OFFSET = 4.0            # 1 standard HighwayEnv lane width in meters
+    MAX_YAW_RATE = 1.0               # 1.0 rad/s (~57.3 deg/s)
 
     def __init__(
         self,
@@ -395,6 +416,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         danger_zone: float = 8.0,
         danger_penalty: float = 0.3,
         jitter_penalty: float = 0.12,
+        include_continuous_features: bool = True,
+        apply_reward_shaping: bool = True,
     ) -> None:
         super().__init__(env)
         self.collision_penalty = collision_penalty
@@ -404,23 +427,32 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         self.danger_zone = danger_zone
         self.danger_penalty = danger_penalty
         self.jitter_penalty = jitter_penalty
+        self.include_continuous_features = include_continuous_features
+        self.apply_reward_shaping = apply_reward_shaping
 
+        self.obs_dim = (
+            self.TACTICAL_OBS_DIM
+            if self.include_continuous_features
+            else self.BASE_TACTICAL_OBS_DIM
+        )
         self.observation_space = gym.spaces.Box(
-            low=-1.0, high=1.0, shape=(self.TACTICAL_OBS_DIM,), dtype=np.float32
+            low=-1.0, high=1.0, shape=(self.obs_dim,), dtype=np.float32
         )
 
         self._vehicles_ahead: set[int] = set()
         self._prev_lane: int | None = None
         self._prev_action: int | None = None
         self._steps_blocked: int = 0
+        self._prev_heading: float | None = None
+        self._current_yaw_rate: float = 0.0
 
     def _build_tactical_obs(self) -> np.ndarray:
-        """Build the 27-dim structured tactical observation vector."""
+        """Build the structured tactical observation vector (30-dim or 27-dim)."""
         unwrapped = self.env.unwrapped
         ego = unwrapped.vehicle
         road = unwrapped.road
 
-        obs = np.zeros(self.TACTICAL_OBS_DIM, dtype=np.float32)
+        obs = np.zeros(self.obs_dim, dtype=np.float32)
 
         # --- Ego State (5 features) ---
         ego_speed = ego.speed
@@ -529,18 +561,45 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         else:
             obs[26] = 1.0  # no collision risk
 
+        # --- Continuous Control Stability Features (3 features) ---
+        if self.include_continuous_features:
+            lane = getattr(ego, "lane", None)
+            if lane is None and hasattr(unwrapped, "road") and hasattr(ego, "lane_index"):
+                lane = unwrapped.road.network.get_lane(ego.lane_index)
+
+            if lane is not None:
+                s, lat = lane.local_coordinates(ego.position)
+                lane_heading = lane.heading_at(s)
+                psi_err = wrap_to_pi(float(ego.heading) - float(lane_heading))
+                y_lane = float(lat)
+            else:
+                psi_err = 0.0
+                y_lane = 0.0
+
+            self._last_psi_err = psi_err
+            self._last_y_lane = y_lane
+
+            obs[27] = np.clip(psi_err / self.MAX_HEADING_ERROR, -1.0, 1.0)
+            obs[28] = np.clip(y_lane / self.MAX_LANE_OFFSET, -1.0, 1.0)
+            obs[29] = np.clip(self._current_yaw_rate / self.MAX_YAW_RATE, -1.0, 1.0)
+
         return obs
 
-    def _get_action_mask(self) -> np.ndarray:
-        """Return boolean mask of shape (5,) indicating valid discrete actions."""
+    def _get_action_mask(self) -> np.ndarray | None:
+        """Return boolean mask of shape (5,) indicating valid discrete actions, or None for continuous actions."""
+        if isinstance(self.action_space, gym.spaces.Box):
+            return None
         unwrapped = self.env.unwrapped
         if hasattr(unwrapped, "get_available_actions"):
-            avail = unwrapped.get_available_actions()
-            mask = np.zeros(5, dtype=bool)
-            for a in avail:
-                if 0 <= a < 5:
-                    mask[a] = True
-            return mask
+            try:
+                avail = unwrapped.get_available_actions()
+                mask = np.zeros(5, dtype=bool)
+                for a in avail:
+                    if 0 <= a < 5:
+                        mask[a] = True
+                return mask
+            except (NotImplementedError, AttributeError):
+                return None
         return np.ones(5, dtype=bool)
 
     def reset(
@@ -555,6 +614,11 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         ego = unwrapped.vehicle
         self._prev_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
 
+        self._prev_heading = float(ego.heading) if hasattr(ego, "heading") else 0.0
+        self._current_yaw_rate = 0.0
+        self._last_psi_err = 0.0
+        self._last_y_lane = 0.0
+
         # Track vehicles ahead in adjacent corridor (|lane_diff| <= 1)
         ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
         for v in unwrapped.road.vehicles:
@@ -567,96 +631,116 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         info["action_mask"] = self._get_action_mask()
         info["overtake_count"] = 0
         info["speed"] = ego.speed
+        if self.include_continuous_features:
+            info["heading_error"] = self._last_psi_err
+            info["lateral_offset"] = self._last_y_lane
+            info["yaw_rate"] = self._current_yaw_rate
         return obs, info
 
     def step(
-        self, action: int
+        self, action: Any
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         _, base_reward, terminated, truncated, info = self.env.step(action)
 
         unwrapped = self.env.unwrapped
         ego = unwrapped.vehicle
 
+        # --- Compute yaw rate via finite difference ---
+        dt = 1.0 / unwrapped.config.get("policy_frequency", 5)
+        current_heading = float(ego.heading) if hasattr(ego, "heading") else 0.0
+        if self._prev_heading is not None and dt > 0:
+            heading_diff = wrap_to_pi(current_heading - self._prev_heading)
+            self._current_yaw_rate = float(heading_diff / dt)
+        else:
+            self._current_yaw_rate = 0.0
+        self._prev_heading = current_heading
+
         # --- Build tactical observation ---
         obs = self._build_tactical_obs()
 
-        # --- Calibrated Reward Shaping (v3: crash-averse + anti-jitter + impatience) ---
-        reward = 0.0
+        # --- Calibrated Reward Shaping (only for discrete meta-actions) ---
+        reward = base_reward
         overtake_count = 0
 
-        if ego.crashed:
-            reward = self.collision_penalty  # -50: must outweigh any speed gains
-        else:
-            # Speed incentive: scaled to 0.5 max (was 1.0)
-            speed_reward = 0.5 * np.clip((ego.speed - 20.0) / 10.0, 0.0, 1.0)
-            reward += speed_reward
+        if self.apply_reward_shaping and not isinstance(self.action_space, gym.spaces.Box):
+            reward = 0.0
+            if ego.crashed:
+                reward = self.collision_penalty  # -50: must outweigh any speed gains
+            else:
+                # Speed incentive: scaled to 0.5 max (was 1.0)
+                speed_reward = 0.5 * np.clip((ego.speed - 20.0) / 10.0, 0.0, 1.0)
+                reward += speed_reward
 
-            # Survival bonus: +0.15 per step for staying alive
-            reward += 0.15
+                # Survival bonus: +0.15 per step for staying alive
+                reward += 0.15
 
-            # Proximity danger penalty: penalize getting too close to others
-            min_dist = float('inf')
-            for v in unwrapped.road.vehicles:
-                if v is not ego:
-                    dx = v.position[0] - ego.position[0]
-                    dy = v.position[1] - ego.position[1]
-                    d = np.sqrt(dx**2 + dy**2)
-                    if d < min_dist:
-                        min_dist = d
-            if min_dist < self.danger_zone:
-                # Quadratic penalty: gets severe as distance → 0
-                proximity_frac = 1.0 - (min_dist / self.danger_zone)
-                reward -= self.danger_penalty * (proximity_frac ** 2)
+                # Proximity danger penalty: penalize getting too close to others
+                min_dist = float('inf')
+                for v in unwrapped.road.vehicles:
+                    if v is not ego:
+                        dx = v.position[0] - ego.position[0]
+                        dy = v.position[1] - ego.position[1]
+                        d = np.sqrt(dx**2 + dy**2)
+                        if d < min_dist:
+                            min_dist = d
+                if min_dist < self.danger_zone:
+                    # Quadratic penalty: gets severe as distance → 0
+                    proximity_frac = 1.0 - (min_dist / self.danger_zone)
+                    reward -= self.danger_penalty * (proximity_frac ** 2)
 
-            # Persistent blockage penalty with escalating impatience
-            front, _ = unwrapped.road.neighbour_vehicles(ego, ego.lane_index)
-            if front is not None:
-                dist = front.position[0] - ego.position[0]
-                if 0.0 < dist < self.BLOCK_DIST and front.speed < self.BLOCK_SPEED:
-                    self._steps_blocked += 1
-                    # Impatience escalates from 1.0x to 2.5x after 10 steps (2 seconds)
-                    impatience_factor = 1.0 + min(max(self._steps_blocked - 10, 0) / 10.0, 1.5)
-                    frac = 1.0 - (dist / self.BLOCK_DIST)
-                    reward -= self.blockage_coef * frac * impatience_factor
+                # Persistent blockage penalty with escalating impatience
+                front, _ = unwrapped.road.neighbour_vehicles(ego, ego.lane_index)
+                if front is not None:
+                    dist = front.position[0] - ego.position[0]
+                    if 0.0 < dist < self.BLOCK_DIST and front.speed < self.BLOCK_SPEED:
+                        self._steps_blocked += 1
+                        # Impatience escalates from 1.0x to 2.5x after 10 steps (2 seconds)
+                        impatience_factor = 1.0 + min(max(self._steps_blocked - 10, 0) / 10.0, 1.5)
+                        frac = 1.0 - (dist / self.BLOCK_DIST)
+                        reward -= self.blockage_coef * frac * impatience_factor
+                    else:
+                        self._steps_blocked = 0
                 else:
                     self._steps_blocked = 0
-            else:
-                self._steps_blocked = 0
 
-            # Overtake bonus (strictly adjacent corridor: |lane_diff| <= 1)
-            current_ahead: set[int] = set()
-            ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
-            for v in unwrapped.road.vehicles:
-                if v is not ego:
-                    v_id = id(v)
-                    v_lane = v.lane_index[2] if hasattr(v, "lane_index") else 0
-                    lane_diff = abs(v_lane - ego_lane)
-                    if lane_diff <= 1:
-                        if v.position[0] > ego.position[0]:
-                            current_ahead.add(v_id)
-                        elif v_id in self._vehicles_ahead:
-                            overtake_count += 1
-            self._vehicles_ahead = current_ahead
-            reward += overtake_count * self.overtake_bonus
+                # Overtake bonus (strictly adjacent corridor: |lane_diff| <= 1)
+                current_ahead: set[int] = set()
+                ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
+                for v in unwrapped.road.vehicles:
+                    if v is not ego:
+                        v_id = id(v)
+                        v_lane = v.lane_index[2] if hasattr(v, "lane_index") else 0
+                        lane_diff = abs(v_lane - ego_lane)
+                        if lane_diff <= 1:
+                            if v.position[0] > ego.position[0]:
+                                current_ahead.add(v_id)
+                            elif v_id in self._vehicles_ahead:
+                                overtake_count += 1
+                self._vehicles_ahead = current_ahead
+                reward += overtake_count * self.overtake_bonus
 
-            # Lane change regularization
-            new_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
-            if self._prev_lane is not None and new_lane != self._prev_lane:
-                reward -= self.lane_change_penalty
-            self._prev_lane = new_lane
+                # Lane change regularization
+                new_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
+                if self._prev_lane is not None and new_lane != self._prev_lane:
+                    reward -= self.lane_change_penalty
+                self._prev_lane = new_lane
 
-            # Action jitter penalty (discourage bang-bang oscillation between FASTER and SLOWER)
-            if self._prev_action is not None:
-                if (action == 3 and self._prev_action == 4) or (action == 4 and self._prev_action == 3):
-                    reward -= self.jitter_penalty
-                elif action in [3, 4] and self._prev_action in [1, 3, 4] and action != self._prev_action:
-                    reward -= self.jitter_penalty * 0.4
-            self._prev_action = action
+                # Action jitter penalty (discourage bang-bang oscillation between FASTER and SLOWER)
+                if self._prev_action is not None:
+                    if (action == 3 and self._prev_action == 4) or (action == 4 and self._prev_action == 3):
+                        reward -= self.jitter_penalty
+                    elif action in [3, 4] and self._prev_action in [1, 3, 4] and action != self._prev_action:
+                        reward -= self.jitter_penalty * 0.4
+                self._prev_action = action
 
         info["action_mask"] = self._get_action_mask()
         info["overtake_count"] = overtake_count if not ego.crashed else 0
         info["speed"] = ego.speed
         info["crashed"] = ego.crashed
+        if self.include_continuous_features:
+            info["heading_error"] = self._last_psi_err
+            info["lateral_offset"] = self._last_y_lane
+            info["yaw_rate"] = self._current_yaw_rate
 
         return obs, float(reward), terminated, truncated, info
 
@@ -695,6 +779,10 @@ class FrameStackTacticalWrapper(gym.Wrapper):
 
     def _get_stacked_obs(self) -> np.ndarray:
         return np.concatenate(self._frames, axis=0).astype(np.float32)
+
+
+# Canonical alias for FrameStackTacticalWrapper
+ObservationStackWrapper = FrameStackTacticalWrapper
 
 
 def make_env(
@@ -764,6 +852,7 @@ def make_optimal_env(
     render_mode: str | None = None,
     frame_stack_k: int = 3,
     duration: int = 100,
+    include_continuous_features: bool = False,
 ) -> gym.Env:
     """Create an environment with TacticalLaneObservation + FrameStack wrappers.
 
@@ -777,9 +866,13 @@ def make_optimal_env(
         render_mode: Rendering mode ('human', 'rgb_array', or None).
         frame_stack_k: Number of frames to stack (0 = no stacking).
         duration: Episode duration in simulated seconds (100s = 500 steps).
+        include_continuous_features: If True, computes and appends 3 continuous control
+            stability features (psi_err, y_lane, yaw_rate) to yield 30-dim base
+            (or 90-dim stacked at K=3). If False, outputs legacy 27-dim base (81-dim stacked).
 
     Returns:
-        Wrapped environment producing 81-dim (K=3) or 27-dim (K=0) observations.
+        Wrapped environment producing 90-dim (K=3) or 30-dim (K=0) observations
+        (or 81/27 if include_continuous_features=False).
     """
     cfg = copy.deepcopy(DEFAULT_ENV_CONFIG)
     cfg.update({
@@ -803,7 +896,9 @@ def make_optimal_env(
         config=cfg,
     )
 
-    env = TacticalLaneObservationWrapper(env)
+    env = TacticalLaneObservationWrapper(
+        env, include_continuous_features=include_continuous_features
+    )
 
     if frame_stack_k > 0:
         env = FrameStackTacticalWrapper(env, k=frame_stack_k)
@@ -813,6 +908,105 @@ def make_optimal_env(
         env.action_space.seed(seed)
 
     return env
+
+
+def make_continuous_env(
+    lanes_count: int = 4,
+    vehicles_density: float = 1.4,
+    vehicles_count: int = 14,
+    seed: int | None = None,
+    render_mode: str | None = None,
+    frame_stack_k: int = 3,
+    duration: int = 100,
+    include_continuous_features: bool = True,
+    reward_config: Any = None,
+    offroad_terminal: bool = True,
+    tier: str = "full_adas",
+    **overrides: Any,
+) -> gym.Env:
+    """Create an environment with ContinuousAction, ground-truth reward, and 30-dim observation wrapper.
+
+    Factory function for continuous-control overtaking agent pipeline (Sprint 1).
+
+    Args:
+        lanes_count: Number of highway lanes.
+        vehicles_density: Traffic density parameter.
+        vehicles_count: Total NPC vehicles.
+        seed: Random seed.
+        render_mode: Rendering mode ('human', 'rgb_array', or None).
+        frame_stack_k: Number of frames to stack (0 = no stacking).
+        duration: Episode duration in simulated seconds (100s = 500 steps).
+        include_continuous_features: If True, computes and appends 3 continuous control
+            stability features (psi_err, y_lane, yaw_rate) to yield 30-dim base
+            (or 90-dim stacked at K=3).
+        reward_config: Optional ContinuousRewardConfig instance.
+        offroad_terminal: If True, terminates episode on leaving road.
+        tier: Sensor tier for observation filtering ('full_adas', 'front_only', etc.).
+        **overrides: Additional config overrides merged into highway-env config.
+
+    Returns:
+        Wrapped continuous environment producing 90-dim (K=3) or 30-dim (K=0) observations.
+    """
+    from continuous_reward import ContinuousHighwayWrapper, ContinuousRewardConfig
+
+    cfg = copy.deepcopy(DEFAULT_ENV_CONFIG)
+    cfg.update({
+        "action": {
+            "type": "ContinuousAction",
+            "acceleration_range": (-5.0, 3.0),
+            "steering_range": (-math.pi / 12.0, math.pi / 12.0),
+            "speed_range": (0.0, 30.0),
+            "longitudinal": True,
+            "lateral": True,
+            "dynamical": False,
+            "clip": True,
+        },
+        "lanes_count": lanes_count,
+        "vehicles_density": vehicles_density,
+        "vehicles_count": vehicles_count,
+        "duration": duration,
+        "policy_frequency": 5,
+        "simulation_frequency": 15,
+        "offroad_terminal": offroad_terminal,
+        "collision_reward": 0.0,
+        "high_speed_reward": 0.0,
+        "right_lane_reward": 0.0,
+        "on_road_reward": 0.0,
+        "lane_change_reward": 0.0,
+        "normalize_reward": False,
+    })
+    cfg.update(overrides)
+
+    base_env = gym.make(
+        "highway-fast-v0",
+        render_mode=render_mode,
+        config=cfg,
+    )
+
+    if tier != "full_adas":
+        base_env = SensorTierWrapper(base_env, tier=tier)
+
+    # Wrap with 30-dim observation wrapper (discrete reward shaping disabled)
+    env = TacticalLaneObservationWrapper(
+        base_env,
+        include_continuous_features=include_continuous_features,
+        apply_reward_shaping=False,
+    )
+
+    # Wrap with ground-truth continuous reward wrapper
+    reward_cfg = reward_config or ContinuousRewardConfig()
+    env = ContinuousHighwayWrapper(env, reward_config=reward_cfg)
+
+    # Frame stacking
+    if frame_stack_k > 0:
+        env = FrameStackTacticalWrapper(env, k=frame_stack_k)
+
+    if seed is not None:
+        env.reset(seed=seed)
+        env.action_space.seed(seed)
+
+    return env
+
 
 
 def _run_smoke_test() -> None:

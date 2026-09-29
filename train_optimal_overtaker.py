@@ -190,8 +190,45 @@ def train(args: argparse.Namespace) -> str:
     masks = torch.zeros(
         (args.num_steps, args.num_envs, action_dim), dtype=torch.bool, device=device
     )
+    terms = torch.zeros((args.num_steps, args.num_envs), device=device)
+    truncs = torch.zeros((args.num_steps, args.num_envs), device=device)
+    trunc_bootstrap_values = torch.zeros((args.num_steps, args.num_envs), device=device)
 
     global_step = 0
+    start_iteration = 1
+    last_save_step = 0
+
+    # Resume from checkpoint if requested (D1-1)
+    if args.resume:
+        if os.path.exists(args.resume):
+            ckpt = torch.load(args.resume, map_location=device, weights_only=False)
+            state_dict = (
+                ckpt["model_state_dict"]
+                if isinstance(ckpt, dict) and "model_state_dict" in ckpt
+                else ckpt
+            )
+            agent.load_state_dict(state_dict)
+            if isinstance(ckpt, dict) and "optimizer_state_dict" in ckpt:
+                optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+            if isinstance(ckpt, dict) and "global_step" in ckpt:
+                global_step = ckpt["global_step"]
+                last_save_step = global_step
+            if isinstance(ckpt, dict) and "iteration" in ckpt:
+                start_iteration = ckpt["iteration"] + 1
+            if isinstance(ckpt, dict) and "rng_state" in ckpt:
+                rng = ckpt["rng_state"]
+                if "torch" in rng:
+                    torch.set_rng_state(rng["torch"])
+                if torch.cuda.is_available() and rng.get("cuda") is not None:
+                    torch.cuda.set_rng_state_all(rng["cuda"])
+                if "numpy" in rng:
+                    np.random.set_state(rng["numpy"])
+                if "python" in rng:
+                    random.setstate(rng["python"])
+            print(f"✓ Resumed training from {args.resume} at global_step={global_step}, iteration={start_iteration}", flush=True)
+        else:
+            raise FileNotFoundError(f"Resume checkpoint not found: {args.resume}")
+
     start_time = time.time()
     next_obs, next_info = envs.reset(seed=args.seed)
     next_obs = torch.tensor(next_obs, dtype=torch.float32, device=device)
@@ -207,7 +244,7 @@ def train(args: argparse.Namespace) -> str:
     episode_speeds: list[float] = []
     episode_overtakes: list[int] = []
 
-    for iteration in range(1, num_iterations + 1):
+    for iteration in range(start_iteration, num_iterations + 1):
         progress = (iteration - 1.0) / num_iterations
 
         # Anneal learning rate
@@ -239,6 +276,23 @@ def train(args: argparse.Namespace) -> str:
             )
             next_done_np = np.logical_or(terminations, truncations)
 
+            terms[step] = torch.tensor(terminations, dtype=torch.float32, device=device)
+            truncs[step] = torch.tensor(truncations, dtype=torch.float32, device=device)
+
+            if getattr(args, "bootstrap_truncation", False):
+                is_trunc = np.logical_and(truncations, np.logical_not(terminations))
+                if np.any(is_trunc):
+                    for env_idx in np.where(is_trunc)[0]:
+                        if "final_obs" in infos and infos.get("_final_obs", [False] * args.num_envs)[env_idx]:
+                            final_o = infos["final_obs"][env_idx]
+                        elif "final_observation" in infos and infos.get("_final_observation", [False] * args.num_envs)[env_idx]:
+                            final_o = infos["final_observation"][env_idx]
+                        else:
+                            final_o = step_obs[env_idx]
+                        final_o_t = torch.tensor(final_o, dtype=torch.float32, device=device).unsqueeze(0)
+                        with torch.no_grad():
+                            trunc_bootstrap_values[step, env_idx] = agent.get_value(final_o_t).squeeze()
+
             rewards[step] = torch.tensor(
                 step_reward, dtype=torch.float32, device=device
             )
@@ -269,21 +323,48 @@ def train(args: argparse.Namespace) -> str:
             advantages = torch.zeros_like(rewards, device=device)
             lastgaelam = 0.0
             for t in reversed(range(args.num_steps)):
-                if t == args.num_steps - 1:
-                    nextnonterminal = 1.0 - next_done
-                    nextvalues = next_value
+                if getattr(args, "bootstrap_truncation", False):
+                    # Truncation Bootstrapping (B7-1 fix)
+                    if t == args.num_steps - 1:
+                        is_term = terms[t]
+                        is_trunc = truncs[t]
+                        nextnonterminal = 1.0 - is_term
+                        nextvalues = torch.where(
+                            (is_trunc.bool() & ~is_term.bool()),
+                            trunc_bootstrap_values[t],
+                            next_value.squeeze(0),
+                        )
+                        nextnoncutoff = 1.0 - torch.clamp(is_term + is_trunc, 0.0, 1.0)
+                    else:
+                        is_term = terms[t]
+                        is_trunc = truncs[t]
+                        nextnonterminal = 1.0 - is_term
+                        nextvalues = torch.where(
+                            (is_trunc.bool() & ~is_term.bool()),
+                            trunc_bootstrap_values[t],
+                            values[t + 1],
+                        )
+                        nextnoncutoff = 1.0 - torch.clamp(is_term + is_trunc, 0.0, 1.0)
+
+                    delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
+                    advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnoncutoff * lastgaelam
                 else:
-                    nextnonterminal = 1.0 - dones[t + 1]
-                    nextvalues = values[t + 1]
-                delta = (
-                    rewards[t]
-                    + args.gamma * nextvalues * nextnonterminal
-                    - values[t]
-                )
-                advantages[t] = lastgaelam = (
-                    delta
-                    + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
-                )
+                    # Legacy behavior (default OFF): collapses truncations into terminal
+                    if t == args.num_steps - 1:
+                        nextnonterminal = 1.0 - next_done
+                        nextvalues = next_value
+                    else:
+                        nextnonterminal = 1.0 - dones[t + 1]
+                        nextvalues = values[t + 1]
+                    delta = (
+                        rewards[t]
+                        + args.gamma * nextvalues * nextnonterminal
+                        - values[t]
+                    )
+                    advantages[t] = lastgaelam = (
+                        delta
+                        + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                    )
             returns = advantages + values
 
         # Flatten
@@ -381,10 +462,36 @@ def train(args: argparse.Namespace) -> str:
                 flush=True,
             )
 
+        # Checkpointing (D1-1)
+        if args.checkpoint_dir and (global_step - last_save_step >= args.save_frequency):
+            os.makedirs(args.checkpoint_dir, exist_ok=True)
+            ckpt_data = {
+                "model_state_dict": agent.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "global_step": global_step,
+                "iteration": iteration,
+                "obs_dim": obs_dim,
+                "action_dim": action_dim,
+                "args": vars(args),
+                "rng_state": {
+                    "torch": torch.get_rng_state(),
+                    "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+                    "numpy": np.random.get_state(),
+                    "python": random.getstate(),
+                },
+            }
+            step_ckpt_path = os.path.join(args.checkpoint_dir, f"checkpoint_step_{global_step}.pt")
+            latest_ckpt_path = os.path.join(args.checkpoint_dir, "checkpoint_latest.pt")
+            torch.save(ckpt_data, step_ckpt_path)
+            torch.save(ckpt_data, latest_ckpt_path)
+            last_save_step = global_step
+            print(f"✓ Checkpoint saved: {step_ckpt_path} (step {global_step})", flush=True)
+
         # Periodic validation and checkpoint
         if iteration % 20 == 0 or iteration == num_iterations:
-            os.makedirs("models", exist_ok=True)
-            ckpt_path = f"models/ppo_optimal_overtaker_{args.lanes}lane.pt"
+            val_dir = getattr(args, "checkpoint_dir", None) or "scratch/checkpoints"
+            os.makedirs(val_dir, exist_ok=True)
+            ckpt_path = os.path.join(val_dir, f"val_ppo_optimal_overtaker_{args.lanes}lane.pt")
             torch.save({
                 "model_state_dict": agent.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
@@ -393,6 +500,12 @@ def train(args: argparse.Namespace) -> str:
                 "iteration": iteration,
                 "global_step": global_step,
                 "args": vars(args),
+                "rng_state": {
+                    "torch": torch.get_rng_state(),
+                    "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+                    "numpy": np.random.get_state(),
+                    "python": random.getstate(),
+                },
             }, ckpt_path)
 
             val_results = evaluate(
@@ -409,7 +522,13 @@ def train(args: argparse.Namespace) -> str:
             eval_score = val_results["mean_speed_kmh"] - val_results["crash_rate"] * 2
             if eval_score > best_eval_score:
                 best_eval_score = eval_score
-                best_path = f"models/ppo_optimal_overtaker_{args.lanes}lane_best.pt"
+                if getattr(args, "total_timesteps", 600000) < 100000 or getattr(args, "dry_run", False):
+                    best_dir = getattr(args, "checkpoint_dir", None) or "scratch/checkpoints"
+                    os.makedirs(best_dir, exist_ok=True)
+                    best_path = os.path.join(best_dir, f"ppo_optimal_overtaker_{args.lanes}lane_best.pt")
+                else:
+                    os.makedirs("models", exist_ok=True)
+                    best_path = f"models/ppo_optimal_overtaker_{args.lanes}lane_best.pt"
                 torch.save({
                     "model_state_dict": agent.state_dict(),
                     "obs_dim": obs_dim,
@@ -426,13 +545,30 @@ def train(args: argparse.Namespace) -> str:
     envs.close()
     writer.close()
 
-    # Final save
-    final_path = f"models/ppo_optimal_overtaker_{args.lanes}lane.pt"
+    # Final save with tooling guard against overwriting canonical model on dry-runs
+    if getattr(args, "output_path", None) is not None:
+        final_path = args.output_path
+    elif getattr(args, "total_timesteps", 600000) < 100000 or getattr(args, "dry_run", False):
+        os.makedirs("scratch/checkpoints", exist_ok=True)
+        final_path = f"scratch/checkpoints/ppo_optimal_overtaker_{args.lanes}lane.pt"
+    else:
+        os.makedirs("models", exist_ok=True)
+        final_path = f"models/ppo_optimal_overtaker_{args.lanes}lane.pt"
+    os.makedirs(os.path.dirname(final_path), exist_ok=True)
     torch.save({
         "model_state_dict": agent.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
         "obs_dim": obs_dim,
         "action_dim": action_dim,
+        "iteration": num_iterations,
+        "global_step": global_step,
         "args": vars(args),
+        "rng_state": {
+            "torch": torch.get_rng_state(),
+            "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+            "numpy": np.random.get_state(),
+            "python": random.getstate(),
+        },
     }, final_path)
     print(f"\n✓ Final model saved: {final_path}", flush=True)
     return final_path
@@ -448,25 +584,46 @@ def evaluate(
     frame_stack_k: int = 3,
     device: str = "cpu",
     deterministic: bool = True,
+    include_continuous_features: bool | None = None,
 ) -> dict[str, Any]:
     """Evaluate trained optimal overtaking agent."""
+    checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+    state_dict = (
+        checkpoint["model_state_dict"]
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint
+        else checkpoint
+    )
+
+    # Infer expected observation dimension if not explicitly provided (C8-1 fix)
+    if include_continuous_features is None:
+        if isinstance(checkpoint, dict) and "obs_dim" in checkpoint:
+            expected_obs_dim = checkpoint["obs_dim"]
+        elif isinstance(state_dict, dict) and "actor.0.weight" in state_dict:
+            expected_obs_dim = state_dict["actor.0.weight"].shape[1]
+        elif isinstance(state_dict, dict) and "critic.0.weight" in state_dict:
+            expected_obs_dim = state_dict["critic.0.weight"].shape[1]
+        else:
+            expected_obs_dim = 81
+
+        if expected_obs_dim in (30, 90):
+            include_continuous_features = True
+        else:
+            include_continuous_features = False
+
     env = env_config.make_optimal_env(
         lanes_count=lanes_count,
         vehicles_density=vehicles_density,
         vehicles_count=vehicles_count,
         seed=seed_start,
         frame_stack_k=frame_stack_k,
+        include_continuous_features=include_continuous_features,
     )
 
     obs_dim = int(np.prod(env.observation_space.shape))
     action_dim = int(env.action_space.n)
 
     agent = OptimalAgent(obs_dim=obs_dim, action_dim=action_dim).to(device)
-    checkpoint = torch.load(model_path, map_location=device)
-    if "model_state_dict" in checkpoint:
-        agent.load_state_dict(checkpoint["model_state_dict"])
-    else:
-        agent.load_state_dict(checkpoint)
+    agent.load_state_dict(state_dict)
     agent.eval()
 
     crashes = 0
@@ -585,6 +742,42 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--vf-coef", type=float, default=0.5)
     parser.add_argument("--max-grad-norm", type=float, default=0.5)
     parser.add_argument("--cuda", action="store_true", default=True)
+
+    # Truncation Bootstrapping (B7-1)
+    parser.add_argument(
+        "--bootstrap-truncation",
+        action="store_true",
+        default=False,
+        help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
+    )
+
+    # Checkpointing and Resuming (D1-1)
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        default="checkpoints",
+        help="Directory to save periodic training checkpoints.",
+    )
+    parser.add_argument(
+        "--save-frequency",
+        type=int,
+        default=50000,
+        help="Save checkpoint every N environment steps.",
+    )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        help="Path to checkpoint from which to resume training.",
+    )
+    parser.add_argument(
+        "--output-path",
+        "--output_path",
+        dest="output_path",
+        type=str,
+        default=None,
+        help="Explicit output path for model checkpoint.",
+    )
 
     # Evaluation
     parser.add_argument("--eval-only", action="store_true", default=False)

@@ -35,3 +35,9 @@ scan_overtakes.py
 .vscode/
 .idea/
 Report*.pdf
+Form*.docx
+Form*.pdf
+
+# Scratch & temporary artifacts
+scratch/
+*.zip
