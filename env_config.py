@@ -260,7 +260,7 @@ class TacticalOvertakingWrapper(gym.Wrapper):
     Mechanisms implemented:
     - Mechanism A (Headway penalty): Penalizes tailgating when blocked in-lane
       within 25m of a lead vehicle at positive or matching relative speed.
-    - Mechanism B (Overtake bonus): Rewards overtaking vehicles (+1.0 per vehicle).
+    - Mechanism B (Overtake bonus): Rewards overtaking vehicles (+5.0 per vehicle).
     - Mechanism C (Action masking): Exposes valid discrete action mask in info dict.
     """
 
@@ -384,8 +384,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
 
     Also implements calibrated reward shaping:
     - Persistent blockage penalty (cannot be escaped by braking)
-    - Calibrated collision penalty (-10.0)
-    - Active overtake bonus (+2.5)
+    - Collision penalty (-50.0)
+    - Overtake bonus (+1.0)
     - Lane change regularization (-0.05)
     - Speed incentive scaled by (v - 20) / 10
     """
@@ -418,6 +418,7 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         jitter_penalty: float = 0.12,
         include_continuous_features: bool = True,
         apply_reward_shaping: bool = True,
+        constrained_mode: bool = False,
     ) -> None:
         super().__init__(env)
         self.collision_penalty = collision_penalty
@@ -429,6 +430,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         self.jitter_penalty = jitter_penalty
         self.include_continuous_features = include_continuous_features
         self.apply_reward_shaping = apply_reward_shaping
+        self.constrained_mode = constrained_mode
+        self._was_crashed = False
 
         self.obs_dim = (
             self.TACTICAL_OBS_DIM
@@ -628,9 +631,11 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
                     self._vehicles_ahead.add(id(v))
 
         obs = self._build_tactical_obs()
+        self._was_crashed = False
         info["action_mask"] = self._get_action_mask()
         info["overtake_count"] = 0
         info["speed"] = ego.speed
+        info["cost"] = 0.0
         if self.include_continuous_features:
             info["heading_error"] = self._last_psi_err
             info["lateral_offset"] = self._last_y_lane
@@ -662,10 +667,16 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         reward = base_reward
         overtake_count = 0
 
+        is_newly_crashed = bool(ego.crashed and not self._was_crashed)
+        if ego.crashed:
+            self._was_crashed = True
+        cost = 1.0 if is_newly_crashed else 0.0
+
         if self.apply_reward_shaping and not isinstance(self.action_space, gym.spaces.Box):
             reward = 0.0
             if ego.crashed:
-                reward = self.collision_penalty  # -50: must outweigh any speed gains
+                # In constrained mode, strip collision_penalty so R_t only contains speed/overtake terms
+                reward = 0.0 if self.constrained_mode else self.collision_penalty
             else:
                 # Speed incentive: scaled to 0.5 max (was 1.0)
                 speed_reward = 0.5 * np.clip((ego.speed - 20.0) / 10.0, 0.0, 1.0)
@@ -737,6 +748,7 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         info["overtake_count"] = overtake_count if not ego.crashed else 0
         info["speed"] = ego.speed
         info["crashed"] = ego.crashed
+        info["cost"] = cost
         if self.include_continuous_features:
             info["heading_error"] = self._last_psi_err
             info["lateral_offset"] = self._last_y_lane
@@ -853,6 +865,9 @@ def make_optimal_env(
     frame_stack_k: int = 3,
     duration: int = 100,
     include_continuous_features: bool = False,
+    collision_penalty: float = -50.0,
+    overtake_bonus: float = 1.0,
+    constrained_mode: bool = False,
 ) -> gym.Env:
     """Create an environment with TacticalLaneObservation + FrameStack wrappers.
 
@@ -869,6 +884,9 @@ def make_optimal_env(
         include_continuous_features: If True, computes and appends 3 continuous control
             stability features (psi_err, y_lane, yaw_rate) to yield 30-dim base
             (or 90-dim stacked at K=3). If False, outputs legacy 27-dim base (81-dim stacked).
+        collision_penalty: Terminal collision penalty for reward shaping (default: -50.0).
+        overtake_bonus: Overtake bonus per vehicle for reward shaping (default: 1.0).
+        constrained_mode: If True, strips collision penalty from reward and emits info['cost'].
 
     Returns:
         Wrapped environment producing 90-dim (K=3) or 30-dim (K=0) observations
@@ -897,7 +915,11 @@ def make_optimal_env(
     )
 
     env = TacticalLaneObservationWrapper(
-        env, include_continuous_features=include_continuous_features
+        env,
+        collision_penalty=collision_penalty,
+        overtake_bonus=overtake_bonus,
+        include_continuous_features=include_continuous_features,
+        constrained_mode=constrained_mode,
     )
 
     if frame_stack_k > 0:
