@@ -270,12 +270,18 @@ class TacticalOvertakingWrapper(gym.Wrapper):
         headway_threshold: float = 40.0,
         headway_penalty_coef: float = 0.35,
         overtake_reward: float = 5.0,
+        overtake_dwell_steps: int = 5,
+        max_overtake_lon_dist: float = 30.0,
     ) -> None:
         super().__init__(env)
         self.headway_threshold = headway_threshold
         self.headway_penalty_coef = headway_penalty_coef
         self.overtake_reward = overtake_reward
+        self.overtake_dwell_steps = overtake_dwell_steps
+        self.max_overtake_lon_dist = max_overtake_lon_dist
         self._vehicles_ahead: set[int] = set()
+        self._credited_overtakes: set[int] = set()
+        self._dwell_counters: dict[int, int] = {}
 
     def _get_action_mask(self) -> np.ndarray:
         """Return boolean mask of shape (5,) indicating valid discrete actions."""
@@ -294,6 +300,8 @@ class TacticalOvertakingWrapper(gym.Wrapper):
     ) -> tuple[np.ndarray, dict[str, Any]]:
         obs, info = self.env.reset(seed=seed, options=options)
         self._vehicles_ahead.clear()
+        self._credited_overtakes.clear()
+        self._dwell_counters.clear()
         unwrapped = self.env.unwrapped
         if hasattr(unwrapped, "vehicle") and hasattr(unwrapped, "road"):
             ego = unwrapped.vehicle
@@ -320,19 +328,39 @@ class TacticalOvertakingWrapper(gym.Wrapper):
 
         if hasattr(unwrapped, "vehicle") and hasattr(unwrapped, "road"):
             ego = unwrapped.vehicle
-            # Mechanism B: Overtake bonus (only for same or adjacent lane vehicles)
-            current_ahead: set[int] = set()
+            # Mechanism B: Overtake bonus (only for same or adjacent lane vehicles, dwell >= 5 steps, once per episode)
+            current_candidates: list[tuple[float, int]] = []
+            ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
             for v in unwrapped.road.vehicles:
                 if v is not ego:
                     v_id = id(v)
-                    lane_diff = abs(v.lane_index[2] - ego.lane_index[2]) if hasattr(v, "lane_index") and hasattr(ego, "lane_index") else 0
-                    if lane_diff <= 1:
-                        if v.position[0] > ego.position[0]:
-                            current_ahead.add(v_id)
-                        elif v_id in self._vehicles_ahead:
-                            overtake_count += 1
-                            bonus += self.overtake_reward
-            self._vehicles_ahead = current_ahead
+                    if v_id in self._credited_overtakes:
+                        continue
+                    v_lane = v.lane_index[2] if hasattr(v, "lane_index") else 0
+                    lane_diff = abs(v_lane - ego_lane)
+                    dx = float(v.position[0] - ego.position[0])
+                    dy = abs(float(v.position[1] - ego.position[1]))
+
+                    if dx > 0:
+                        if lane_diff <= 1:
+                            self._vehicles_ahead.add(v_id)
+                        self._dwell_counters[v_id] = 0
+                    elif dx < 0 and v_id in self._vehicles_ahead:
+                        if lane_diff <= 1 and abs(dx) <= self.max_overtake_lon_dist:
+                            self._dwell_counters[v_id] = self._dwell_counters.get(v_id, 0) + 1
+                            if self._dwell_counters[v_id] >= self.overtake_dwell_steps:
+                                current_candidates.append((dy, v_id))
+                        else:
+                            self._dwell_counters[v_id] = 0
+                    else:
+                        self._dwell_counters[v_id] = 0
+
+            if current_candidates:
+                current_candidates.sort(key=lambda item: item[0])
+                _, best_id = current_candidates[0]
+                self._credited_overtakes.add(best_id)
+                overtake_count = 1
+                bonus += self.overtake_reward
 
             # Mechanism A: Headway penalty for tailgating a slower lead car in lane
             if not ego.crashed and hasattr(unwrapped.road, "neighbour_vehicles"):
@@ -419,6 +447,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         include_continuous_features: bool = True,
         apply_reward_shaping: bool = True,
         constrained_mode: bool = False,
+        overtake_dwell_steps: int = 5,
+        max_overtake_lon_dist: float = 30.0,
     ) -> None:
         super().__init__(env)
         self.collision_penalty = collision_penalty
@@ -431,6 +461,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         self.include_continuous_features = include_continuous_features
         self.apply_reward_shaping = apply_reward_shaping
         self.constrained_mode = constrained_mode
+        self.overtake_dwell_steps = overtake_dwell_steps
+        self.max_overtake_lon_dist = max_overtake_lon_dist
         self._was_crashed = False
 
         self.obs_dim = (
@@ -443,6 +475,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         )
 
         self._vehicles_ahead: set[int] = set()
+        self._credited_overtakes: set[int] = set()
+        self._dwell_counters: dict[int, int] = {}
         self._prev_lane: int | None = None
         self._prev_action: int | None = None
         self._steps_blocked: int = 0
@@ -610,6 +644,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
     ) -> tuple[np.ndarray, dict[str, Any]]:
         _, info = self.env.reset(seed=seed, options=options)
         self._vehicles_ahead.clear()
+        self._credited_overtakes.clear()
+        self._dwell_counters.clear()
         self._steps_blocked = 0
         self._prev_action = None
 
@@ -714,21 +750,39 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
                 else:
                     self._steps_blocked = 0
 
-                # Overtake bonus (strictly adjacent corridor: |lane_diff| <= 1)
-                current_ahead: set[int] = set()
+                # Overtake bonus (strictly adjacent corridor: |lane_diff| <= 1, debounced with dwell and once-per-episode credit)
+                current_candidates: list[tuple[float, int]] = []
                 ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
                 for v in unwrapped.road.vehicles:
                     if v is not ego:
                         v_id = id(v)
+                        if v_id in self._credited_overtakes:
+                            continue
                         v_lane = v.lane_index[2] if hasattr(v, "lane_index") else 0
                         lane_diff = abs(v_lane - ego_lane)
-                        if lane_diff <= 1:
-                            if v.position[0] > ego.position[0]:
-                                current_ahead.add(v_id)
-                            elif v_id in self._vehicles_ahead:
-                                overtake_count += 1
-                self._vehicles_ahead = current_ahead
-                reward += overtake_count * self.overtake_bonus
+                        dx = float(v.position[0] - ego.position[0])
+                        dy = abs(float(v.position[1] - ego.position[1]))
+
+                        if dx > 0:
+                            if lane_diff <= 1:
+                                self._vehicles_ahead.add(v_id)
+                            self._dwell_counters[v_id] = 0
+                        elif dx < 0 and v_id in self._vehicles_ahead:
+                            if lane_diff <= 1 and abs(dx) <= self.max_overtake_lon_dist:
+                                self._dwell_counters[v_id] = self._dwell_counters.get(v_id, 0) + 1
+                                if self._dwell_counters[v_id] >= self.overtake_dwell_steps:
+                                    current_candidates.append((dy, v_id))
+                            else:
+                                self._dwell_counters[v_id] = 0
+                        else:
+                            self._dwell_counters[v_id] = 0
+
+                if current_candidates:
+                    current_candidates.sort(key=lambda item: item[0])
+                    _, best_id = current_candidates[0]
+                    self._credited_overtakes.add(best_id)
+                    overtake_count = 1
+                    reward += self.overtake_bonus
 
                 # Lane change regularization
                 new_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
@@ -868,6 +922,8 @@ def make_optimal_env(
     collision_penalty: float = -50.0,
     overtake_bonus: float = 1.0,
     constrained_mode: bool = False,
+    overtake_dwell_steps: int = 5,
+    max_overtake_lon_dist: float = 30.0,
 ) -> gym.Env:
     """Create an environment with TacticalLaneObservation + FrameStack wrappers.
 
@@ -887,6 +943,8 @@ def make_optimal_env(
         collision_penalty: Terminal collision penalty for reward shaping (default: -50.0).
         overtake_bonus: Overtake bonus per vehicle for reward shaping (default: 1.0).
         constrained_mode: If True, strips collision penalty from reward and emits info['cost'].
+        overtake_dwell_steps: Dwell steps required before crediting overtake (default: 5).
+        max_overtake_lon_dist: Maximum longitudinal distance behind ego for overtake credit (default: 30.0).
 
     Returns:
         Wrapped environment producing 90-dim (K=3) or 30-dim (K=0) observations
@@ -920,6 +978,8 @@ def make_optimal_env(
         overtake_bonus=overtake_bonus,
         include_continuous_features=include_continuous_features,
         constrained_mode=constrained_mode,
+        overtake_dwell_steps=overtake_dwell_steps,
+        max_overtake_lon_dist=max_overtake_lon_dist,
     )
 
     if frame_stack_k > 0:
