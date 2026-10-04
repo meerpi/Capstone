@@ -1,0 +1,944 @@
+{
+  "model_path": "models/ppo_optimal_overtaker_4lane_best.pt",
+  "n_episodes": 100,
+  "seed_start": 2000,
+  "seed_end": 2099,
+  "total_crashes": 10,
+  "crash_rate_pct": 10.0,
+  "mean_speed_ms": 20.45030033305842,
+  "mean_speed_kmh": 73.6210811990103,
+  "mean_lane_changes": 1.63,
+  "mean_return": 34.33219050523647,
+  "category_breakdown": {
+    "(a) Floor-speed rear-end": {
+      "count": 8,
+      "percentage": 80.0
+    },
+    "(b) Lane-change collision": {
+      "count": 2,
+      "percentage": 20.0
+    }
+  },
+  "crashes": [
+    {
+      "seed": 2003,
+      "impact_step": 35,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 16.26 m/s (< 20.0 m/s floor), rel_x=+5.66m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.000005150711164,
+      "final_ego_lane": 3,
+      "collided_vehicle": {
+        "rel_x": 5.65760098842884,
+        "rel_y": 0.0,
+        "speed_ms": 16.264550806137024,
+        "speed_kmh": 58.552382902093285,
+        "lane": 3
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 30,
+          "ego_speed_ms": 20.000026075475255,
+          "ego_speed_kmh": 72.00009387171092,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 8.694029605487685,
+            "rel_y": 0.0,
+            "speed_ms": 16.169547169345698,
+            "speed_kmh": 58.21036980964451,
+            "lane": 3
+          }
+        },
+        {
+          "step": 31,
+          "ego_speed_ms": 20.00001738365017,
+          "ego_speed_kmh": 72.00006258114061,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 7.9279338242618,
+            "rel_y": 0.0,
+            "speed_ms": 16.19241509620259,
+            "speed_kmh": 58.29269434632933,
+            "lane": 3
+          }
+        },
+        {
+          "step": 32,
+          "ego_speed_ms": 20.000011589100115,
+          "ego_speed_kmh": 72.00004172076042,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 7.166413366772247,
+            "rel_y": 0.0,
+            "speed_ms": 16.215941219214578,
+            "speed_kmh": 58.37738838917248,
+            "lane": 3
+          }
+        },
+        {
+          "step": 33,
+          "ego_speed_ms": 20.000007726066745,
+          "ego_speed_kmh": 72.00002781384028,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 6.4095992927951215,
+            "rel_y": 0.0,
+            "speed_ms": 16.24001620423528,
+            "speed_kmh": 58.464058335247,
+            "lane": 3
+          }
+        },
+        {
+          "step": 34,
+          "ego_speed_ms": 20.000005150711164,
+          "ego_speed_kmh": 72.0000185425602,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 5.65760098842884,
+            "rel_y": 0.0,
+            "speed_ms": 16.264550806137024,
+            "speed_kmh": 58.552382902093285,
+            "lane": 3
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2012,
+      "impact_step": 49,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 18.02 m/s (< 20.0 m/s floor), rel_x=+5.01m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.000000017643696,
+      "final_ego_lane": 3,
+      "collided_vehicle": {
+        "rel_x": 5.005240410419788,
+        "rel_y": 0.0,
+        "speed_ms": 18.017133544648992,
+        "speed_kmh": 64.86168076073638,
+        "lane": 3
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 44,
+          "ego_speed_ms": 20.00000008932121,
+          "ego_speed_kmh": 72.00000032155637,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 6.719750259238481,
+            "rel_y": 0.0,
+            "speed_ms": 17.754172977089567,
+            "speed_kmh": 63.91502271752244,
+            "lane": 3
+          }
+        },
+        {
+          "step": 45,
+          "ego_speed_ms": 20.000000059547475,
+          "ego_speed_kmh": 72.00000021437091,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 6.270584836792182,
+            "rel_y": 0.0,
+            "speed_ms": 17.82489328693014,
+            "speed_kmh": 64.16961583294851,
+            "lane": 3
+          }
+        },
+        {
+          "step": 46,
+          "ego_speed_ms": 20.000000039698318,
+          "ego_speed_kmh": 72.00000014291395,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 5.835563482268697,
+            "rel_y": 0.0,
+            "speed_ms": 17.892180167521406,
+            "speed_kmh": 64.41184860307706,
+            "lane": 3
+          }
+        },
+        {
+          "step": 47,
+          "ego_speed_ms": 20.000000026465546,
+          "ego_speed_kmh": 72.00000009527596,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 5.413999507833296,
+            "rel_y": 0.0,
+            "speed_ms": 17.956204539397834,
+            "speed_kmh": 64.6423363418322,
+            "lane": 3
+          }
+        },
+        {
+          "step": 48,
+          "ego_speed_ms": 20.000000017643696,
+          "ego_speed_kmh": 72.0000000635173,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 5.005240410419788,
+            "rel_y": 0.0,
+            "speed_ms": 18.017133544648992,
+            "speed_kmh": 64.86168076073638,
+            "lane": 3
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2022,
+      "impact_step": 33,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 17.86 m/s (< 20.0 m/s floor), rel_x=+5.27m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.000011589100115,
+      "final_ego_lane": 3,
+      "collided_vehicle": {
+        "rel_x": 5.269407668960923,
+        "rel_y": 2.2257029996808342e-07,
+        "speed_ms": 17.861423592704128,
+        "speed_kmh": 64.30112493373487,
+        "lane": 3
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 28,
+          "ego_speed_ms": 20.00005866981932,
+          "ego_speed_kmh": 72.00021121134955,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 7.1544061928275084,
+            "rel_y": 2.0526951587385156e-06,
+            "speed_ms": 17.50781513873495,
+            "speed_kmh": 63.02813449944583,
+            "lane": 3
+          }
+        },
+        {
+          "step": 29,
+          "ego_speed_ms": 20.000039113212882,
+          "ego_speed_kmh": 72.00014080756638,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.65595748661076,
+            "rel_y": 1.1779044246651438e-06,
+            "speed_ms": 17.60023544281211,
+            "speed_kmh": 63.3608475941236,
+            "lane": 3
+          }
+        },
+        {
+          "step": 30,
+          "ego_speed_ms": 20.000026075475255,
+          "ego_speed_kmh": 72.00009387171092,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.1759967525306365,
+            "rel_y": 6.759206687689812e-07,
+            "speed_ms": 17.69001249443749,
+            "speed_kmh": 63.68404497997496,
+            "lane": 3
+          }
+        },
+        {
+          "step": 31,
+          "ego_speed_ms": 20.00001738365017,
+          "ego_speed_kmh": 72.00006258114061,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.713994036323129,
+            "rel_y": 3.878657679479147e-07,
+            "speed_ms": 17.777085546839267,
+            "speed_kmh": 63.99750796862136,
+            "lane": 3
+          }
+        },
+        {
+          "step": 32,
+          "ego_speed_ms": 20.000011589100115,
+          "ego_speed_kmh": 72.00004172076042,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.269407668960923,
+            "rel_y": 2.2257029996808342e-07,
+            "speed_ms": 17.861423592704128,
+            "speed_kmh": 64.30112493373487,
+            "lane": 3
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2028,
+      "impact_step": 54,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 15.85 m/s (< 20.0 m/s floor), rel_x=+5.00m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.000000452188633,
+      "final_ego_lane": 3,
+      "collided_vehicle": {
+        "rel_x": 5.00332087064254,
+        "rel_y": 2.4158453015843406e-13,
+        "speed_ms": 15.85462158041249,
+        "speed_kmh": 57.07663768948496,
+        "lane": 3
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 49,
+          "ego_speed_ms": 20.00000228920496,
+          "ego_speed_kmh": 72.00000824113786,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 8.484510909645849,
+            "rel_y": 2.218669692410913e-12,
+            "speed_ms": 15.521418586359875,
+            "speed_kmh": 55.87710691089555,
+            "lane": 3
+          }
+        },
+        {
+          "step": 50,
+          "ego_speed_ms": 20.00000152613664,
+          "ego_speed_kmh": 72.00000549409191,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 7.588794169076834,
+            "rel_y": 1.2736478538499796e-12,
+            "speed_ms": 15.60726316293438,
+            "speed_kmh": 56.18614738656377,
+            "lane": 3
+          }
+        },
+        {
+          "step": 51,
+          "ego_speed_ms": 20.000001017424427,
+          "ego_speed_kmh": 72.00000366272793,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.710246496436355,
+            "rel_y": 7.318590178329032e-13,
+            "speed_ms": 15.69145204788323,
+            "speed_kmh": 56.48922737237963,
+            "lane": 3
+          }
+        },
+        {
+          "step": 52,
+          "ego_speed_ms": 20.00000067828295,
+          "ego_speed_kmh": 72.00000244181862,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.848536702528122,
+            "rel_y": 4.2099657093785936e-13,
+            "speed_ms": 15.773921518855092,
+            "speed_kmh": 56.786117467878334,
+            "lane": 3
+          }
+        },
+        {
+          "step": 53,
+          "ego_speed_ms": 20.000000452188633,
+          "ego_speed_kmh": 72.00000162787909,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.00332087064254,
+            "rel_y": 2.4158453015843406e-13,
+            "speed_ms": 15.85462158041249,
+            "speed_kmh": 57.07663768948496,
+            "lane": 3
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2046,
+      "impact_step": 477,
+      "category": "(b) Lane-change collision",
+      "explanation": "Crash occurred during/after lane change. Actions in last 5 steps: ['IDLE', 'FASTER', 'LANE_LEFT', 'LANE_LEFT', 'LANE_RIGHT']. Ego lane: 2, speed: 23.52 m/s.",
+      "final_ego_speed_ms": 23.51851851851852,
+      "final_ego_lane": 2,
+      "collided_vehicle": {
+        "rel_x": -0.9268178267095664,
+        "rel_y": -5.249371688487663,
+        "speed_ms": 20.228139313466368,
+        "speed_kmh": 72.82130152847893,
+        "lane": 1
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 472,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": -0.7363349910085617,
+            "rel_y": -7.999999999999998,
+            "speed_ms": 20.222938857414434,
+            "speed_kmh": 72.80257988669196,
+            "lane": 1
+          }
+        },
+        {
+          "step": 473,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 3,
+          "action": "FASTER",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": -0.6917472195257233,
+            "rel_y": -7.999999999999998,
+            "speed_ms": 20.224245698588103,
+            "speed_kmh": 72.80728451491717,
+            "lane": 1
+          }
+        },
+        {
+          "step": 474,
+          "ego_speed_ms": 21.666666666666668,
+          "ego_speed_kmh": 78.0,
+          "ego_lane": 3,
+          "action": "LANE_LEFT",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": -0.6468980798081247,
+            "rel_y": -7.999999999999998,
+            "speed_ms": 20.22554803901514,
+            "speed_kmh": 72.81197294045451,
+            "lane": 1
+          }
+        },
+        {
+          "step": 475,
+          "ego_speed_ms": 22.77777777777778,
+          "ego_speed_kmh": 82.0,
+          "ego_lane": 3,
+          "action": "LANE_LEFT",
+          "lane_change_in_progress": "True",
+          "collided_vehicle": {
+            "rel_x": -0.8639925835025224,
+            "rel_y": -7.218083195146136,
+            "speed_ms": 20.22684590269844,
+            "speed_kmh": 72.81664524971438,
+            "lane": 1
+          }
+        },
+        {
+          "step": 476,
+          "ego_speed_ms": 23.51851851851852,
+          "ego_speed_kmh": 84.66666666666667,
+          "ego_lane": 2,
+          "action": "LANE_RIGHT",
+          "lane_change_in_progress": "True",
+          "collided_vehicle": {
+            "rel_x": -0.9268178267095664,
+            "rel_y": -5.249371688487663,
+            "speed_ms": 20.228139313466368,
+            "speed_kmh": 72.82130152847893,
+            "lane": 1
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2060,
+      "impact_step": 50,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 14.81 m/s (< 20.0 m/s floor), rel_x=+5.96m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.000000011762463,
+      "final_ego_lane": 0,
+      "collided_vehicle": {
+        "rel_x": 5.9600325169264465,
+        "rel_y": 0.0,
+        "speed_ms": 14.80557697437125,
+        "speed_kmh": 53.300077107736506,
+        "lane": 0
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 45,
+          "ego_speed_ms": 20.000000059547475,
+          "ego_speed_kmh": 72.00000021437091,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 10.374375679783952,
+            "rel_y": 0.0,
+            "speed_ms": 14.283121913313195,
+            "speed_kmh": 51.419238887927506,
+            "lane": 0
+          }
+        },
+        {
+          "step": 46,
+          "ego_speed_ms": 20.000000039698318,
+          "ego_speed_kmh": 72.00000014291395,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 9.23100005053709,
+            "rel_y": 0.0,
+            "speed_ms": 14.417288242423222,
+            "speed_kmh": 51.9022376727236,
+            "lane": 0
+          }
+        },
+        {
+          "step": 47,
+          "ego_speed_ms": 20.000000026465546,
+          "ego_speed_kmh": 72.00000009527596,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 8.114457691082066,
+            "rel_y": 0.0,
+            "speed_ms": 14.549197229691332,
+            "speed_kmh": 52.37711002688879,
+            "lane": 0
+          }
+        },
+        {
+          "step": 48,
+          "ego_speed_ms": 20.000000017643696,
+          "ego_speed_kmh": 72.0000000635173,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 7.024297131727224,
+            "rel_y": 0.0,
+            "speed_ms": 14.678676943639747,
+            "speed_kmh": 52.84323699710309,
+            "lane": 0
+          }
+        },
+        {
+          "step": 49,
+          "ego_speed_ms": 20.000000011762463,
+          "ego_speed_kmh": 72.00000004234487,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": false,
+          "collided_vehicle": {
+            "rel_x": 5.9600325169264465,
+            "rel_y": 0.0,
+            "speed_ms": 14.80557697437125,
+            "speed_kmh": 53.300077107736506,
+            "lane": 0
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2069,
+      "impact_step": 100,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 18.30 m/s (< 20.0 m/s floor), rel_x=+5.26m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.000000000000004,
+      "final_ego_lane": 0,
+      "collided_vehicle": {
+        "rel_x": 5.26423543459623,
+        "rel_y": -7.840239517319823e-16,
+        "speed_ms": 18.296616353521024,
+        "speed_kmh": 65.86781887267568,
+        "lane": 0
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 95,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.690660646833862,
+            "rel_y": -8.395343616048376e-16,
+            "speed_ms": 18.167918597102965,
+            "speed_kmh": 65.40450694957067,
+            "lane": 0
+          }
+        },
+        {
+          "step": 96,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.324244366254447,
+            "rel_y": -8.256567591366238e-16,
+            "speed_ms": 18.2010468149138,
+            "speed_kmh": 65.52376853368968,
+            "lane": 0
+          }
+        },
+        {
+          "step": 97,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.964453729237221,
+            "rel_y": -8.1177915666841e-16,
+            "speed_ms": 18.23352863594522,
+            "speed_kmh": 65.64070308940279,
+            "lane": 0
+          }
+        },
+        {
+          "step": 98,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.611159456426208,
+            "rel_y": -7.979015542001961e-16,
+            "speed_ms": 18.265379890850255,
+            "speed_kmh": 65.75536760706092,
+            "lane": 0
+          }
+        },
+        {
+          "step": 99,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.26423543459623,
+            "rel_y": -7.840239517319823e-16,
+            "speed_ms": 18.296616353521024,
+            "speed_kmh": 65.86781887267568,
+            "lane": 0
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2075,
+      "impact_step": 122,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 18.53 m/s (< 20.0 m/s floor), rel_x=+5.29m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.000000000000004,
+      "final_ego_lane": 3,
+      "collided_vehicle": {
+        "rel_x": 5.28619300185062,
+        "rel_y": 1.7763568394002505e-15,
+        "speed_ms": 18.531626155375086,
+        "speed_kmh": 66.71385415935032,
+        "lane": 3
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 117,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.509062535205885,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.434453035891476,
+            "speed_kmh": 66.36403092920932,
+            "lane": 3
+          }
+        },
+        {
+          "step": 118,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.195953142384155,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.459376259089133,
+            "speed_kmh": 66.45375453272088,
+            "lane": 3
+          }
+        },
+        {
+          "step": 119,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.887828394201961,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.483871763152504,
+            "speed_kmh": 66.54193834734902,
+            "lane": 3
+          }
+        },
+        {
+          "step": 120,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.584602746832502,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.50795127509086,
+            "speed_kmh": 66.6286245903271,
+            "lane": 3
+          }
+        },
+        {
+          "step": 121,
+          "ego_speed_ms": 20.000000000000004,
+          "ego_speed_kmh": 72.00000000000001,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.28619300185062,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.531626155375086,
+            "speed_kmh": 66.71385415935032,
+            "lane": 3
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2081,
+      "impact_step": 20,
+      "category": "(b) Lane-change collision",
+      "explanation": "Crash occurred during/after lane change. Actions in last 5 steps: ['LANE_LEFT', 'LANE_LEFT', 'IDLE', 'IDLE', 'IDLE']. Ego lane: 0, speed: 20.02 m/s.",
+      "final_ego_speed_ms": 20.01712743695391,
+      "final_ego_lane": 0,
+      "collided_vehicle": {
+        "rel_x": 5.566454659046542,
+        "rel_y": 0.5967666524996766,
+        "speed_ms": 17.82222080025893,
+        "speed_kmh": 64.15999488093215,
+        "lane": 0
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 15,
+          "ego_speed_ms": 20.086707649579164,
+          "ego_speed_kmh": 72.312147538485,
+          "ego_lane": 1,
+          "action": "LANE_LEFT",
+          "lane_change_in_progress": "True",
+          "collided_vehicle": {
+            "rel_x": 7.031648777618869,
+            "rel_y": -0.9381101874064575,
+            "speed_ms": 17.977891951033264,
+            "speed_kmh": 64.72041102371975,
+            "lane": 1
+          }
+        },
+        {
+          "step": 16,
+          "ego_speed_ms": 20.05780509971944,
+          "ego_speed_kmh": 72.20809835898999,
+          "ego_lane": 1,
+          "action": "LANE_LEFT",
+          "lane_change_in_progress": "True",
+          "collided_vehicle": {
+            "rel_x": 7.086749233664506,
+            "rel_y": 0.9740477782162422,
+            "speed_ms": 17.80780179267386,
+            "speed_kmh": 64.1080864536259,
+            "lane": 1
+          }
+        },
+        {
+          "step": 17,
+          "ego_speed_ms": 20.038536733146294,
+          "ego_speed_kmh": 72.13873223932666,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.704782924952411,
+            "rel_y": 1.2657684013556325,
+            "speed_ms": 17.686038383322458,
+            "speed_kmh": 63.66973817996085,
+            "lane": 1
+          }
+        },
+        {
+          "step": 18,
+          "ego_speed_ms": 20.025691155430863,
+          "ego_speed_kmh": 72.09248815955111,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.128335017145162,
+            "rel_y": 0.9090049519182597,
+            "speed_ms": 17.500086740999286,
+            "speed_kmh": 63.00031226759743,
+            "lane": 0
+          }
+        },
+        {
+          "step": 19,
+          "ego_speed_ms": 20.01712743695391,
+          "ego_speed_kmh": 72.06165877303408,
+          "ego_lane": 0,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.566454659046542,
+            "rel_y": 0.5967666524996766,
+            "speed_ms": 17.82222080025893,
+            "speed_kmh": 64.15999488093215,
+            "lane": 0
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2090,
+      "impact_step": 78,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 18.40 m/s (< 20.0 m/s floor), rel_x=+5.24m. Ego at 20.00 m/s cannot brake below 20.0 m/s.",
+      "final_ego_speed_ms": 20.00000000522776,
+      "final_ego_lane": 3,
+      "collided_vehicle": {
+        "rel_x": 5.241114426097056,
+        "rel_y": 1.7763568394002505e-15,
+        "speed_ms": 18.401620705533883,
+        "speed_kmh": 66.24583453992199,
+        "lane": 3
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 73,
+          "ego_speed_ms": 20.000000026465546,
+          "ego_speed_kmh": 72.00000009527596,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.634200522551623,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.16854806022225,
+            "speed_kmh": 65.4067730168001,
+            "lane": 3
+          }
+        },
+        {
+          "step": 74,
+          "ego_speed_ms": 20.000000017643696,
+          "ego_speed_kmh": 72.0000000635173,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 6.267910129303004,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.23009616208385,
+            "speed_kmh": 65.62834618350186,
+            "lane": 3
+          }
+        },
+        {
+          "step": 75,
+          "ego_speed_ms": 20.000000011762463,
+          "ego_speed_kmh": 72.00000004234487,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.913929358191069,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.289391492423842,
+            "speed_kmh": 65.84180937272583,
+            "lane": 3
+          }
+        },
+        {
+          "step": 76,
+          "ego_speed_ms": 20.000000007841642,
+          "ego_speed_kmh": 72.00000002822992,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.571807654323379,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.346533866710008,
+            "speed_kmh": 66.04752192015603,
+            "lane": 3
+          }
+        },
+        {
+          "step": 77,
+          "ego_speed_ms": 20.00000000522776,
+          "ego_speed_kmh": 72.00000001881995,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": 5.241114426097056,
+            "rel_y": 1.7763568394002505e-15,
+            "speed_ms": 18.401620705533883,
+            "speed_kmh": 66.24583453992199,
+            "lane": 3
+          }
+        }
+      ]
+    }
+  ]
+}

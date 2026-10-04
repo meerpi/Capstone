@@ -1,0 +1,14 @@
+{
+  "model_path": "scratch/optimal_overtaker_extended_speeds/ppo_optimal_overtaker_4lane_best.pt",
+  "n_episodes": 100,
+  "seed_start": 2000,
+  "seed_end": 2099,
+  "total_crashes": 0,
+  "crash_rate_pct": 0.0,
+  "mean_speed_ms": 20.419413622949218,
+  "mean_speed_kmh": 73.50988904261719,
+  "mean_lane_changes": 4.58,
+  "mean_return": 166.79843424518066,
+  "category_breakdown": {},
+  "crashes": []
+}

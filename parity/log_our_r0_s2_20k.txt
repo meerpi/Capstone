@@ -1,0 +1,7 @@
+
+[Our PPO] Training R0 seed=2 steps=20000 (26 updates) gamma=0.8...
+[Our PPO Update 26/26] steps=19968 loss=0.1788
+[Our PPO] Saved weights to parity/checkpoints/our_R0_seed2/model.pt
+[Our PPO] Evaluating R0 seed=2 on seeds 6000-6099...
+[Our PPO Result] Crash: 11/100 (11.0%) [5.6%, 18.8%] | Speed: 20.96 m/s | Return: 20.54 | Dom: SLOWER (60.3%)
+[Our PPO] Saved results to parity/results_our_R0_s2_20000.json

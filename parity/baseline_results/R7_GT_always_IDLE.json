@@ -1,0 +1,46 @@
+{
+  "n_episodes": 100,
+  "crashes": 99,
+  "crash_rate": 0.99,
+  "ci_95": [
+    0.9455406146079194,
+    0.9997468539670226
+  ],
+  "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+  "mean_speed_ms": 25.0,
+  "std_speed_ms": 0.0,
+  "mean_speed_kmh": 90.0,
+  "mean_return": -36.59452201187717,
+  "std_return": 30.258693848988848,
+  "mean_lane_changes": 0.0,
+  "std_lane_changes": 0.0,
+  "mean_rel_speed_ms": 4.844329786939613,
+  "std_rel_speed_ms": 0.5845150567268715,
+  "action_histogram": {
+    "LANE_LEFT": {
+      "count": 0,
+      "share": 0.0
+    },
+    "IDLE": {
+      "count": 6948,
+      "share": 1.0
+    },
+    "LANE_RIGHT": {
+      "count": 0,
+      "share": 0.0
+    },
+    "FASTER": {
+      "count": 0,
+      "share": 0.0
+    },
+    "SLOWER": {
+      "count": 0,
+      "share": 0.0
+    }
+  },
+  "dominant_action": "IDLE",
+  "dominant_action_frac": 1.0,
+  "is_constant": true,
+  "rung": "R7_GT",
+  "baseline_name": "always_IDLE"
+}

@@ -1,0 +1,44 @@
+{
+  "model_path": "scratch/deepset_v2_highway_2m/deepset_v2_highway_best.pt",
+  "n_episodes": 100,
+  "seed_start": 2000,
+  "seed_end": 2099,
+  "total_crashes": 27,
+  "crash_rate_pct": 27.0,
+  "mean_speed_ms": 20.2136954654467,
+  "mean_speed_kmh": 72.76930367560813,
+  "mean_lane_changes": 1.55,
+  "mean_return": 2.802216787361941,
+  "category_breakdown": {
+    "(a) Floor-speed rear-end": {
+      "count": 26,
+      "percentage": 96.29629629629629
+    },
+    "(c) Blind-spot/other": {
+      "count": 1,
+      "percentage": 3.7037037037037033
+    }
+  },
+  "crashes": [
+    {
+      "seed": 2000,
+      "impact_step": 18,
+      "category": "(a) Floor-speed rear-end",
+      "explanation": "In-lane rear-end at floor speed: lead vehicle speed was 17.87 m/s (< 20 m/s floor), rel_x=+5.12m. Ego at 20.01 m/s cannot brake below 20 m/s.",
+      "final_ego_speed_ms": 20.00507479613449,
+      "final_ego_lane": 3,
+      "collided_vehicle": {
+        "rel_x": 5.124939419669801,
+        "rel_y": 0.0021131289456288727,
+        "speed_ms": 17.869514497872874,
+        "speed_kmh": 64.33025219234234,
+        "lane": 3
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 13,
+          "ego_speed_ms": 20.025691155430863,
+          "ego_speed_kmh": 72.09248815955111,
+          "ego_lane": 3,
+          "action": "IDLE",
+          "lane_change_in_progress": 

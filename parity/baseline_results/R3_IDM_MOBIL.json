@@ -1,0 +1,46 @@
+{
+  "n_episodes": 100,
+  "crashes": 68,
+  "crash_rate": 0.68,
+  "ci_95": [
+    0.5792331383683775,
+    0.769780083238423
+  ],
+  "ci_str": "68/100 (68.0%) [57.9%, 77.0%]",
+  "mean_speed_ms": 25.010849360928123,
+  "std_speed_ms": 2.7324266319559896,
+  "mean_speed_kmh": 90.03905769934124,
+  "mean_return": 13.09845898263267,
+  "std_return": 9.8078920220123,
+  "mean_lane_changes": 8.72,
+  "std_lane_changes": 6.146673897320404,
+  "mean_rel_speed_ms": 5.008788246073695,
+  "std_rel_speed_ms": 2.59832929024553,
+  "action_histogram": {
+    "LANE_LEFT": {
+      "count": 412,
+      "share": 0.26309067688378035
+    },
+    "IDLE": {
+      "count": 372,
+      "share": 0.23754789272030652
+    },
+    "LANE_RIGHT": {
+      "count": 460,
+      "share": 0.2937420178799489
+    },
+    "FASTER": {
+      "count": 72,
+      "share": 0.04597701149425287
+    },
+    "SLOWER": {
+      "count": 250,
+      "share": 0.15964240102171137
+    }
+  },
+  "dominant_action": "LANE_RIGHT",
+  "dominant_action_frac": 0.2937420178799489,
+  "is_constant": false,
+  "rung": "R3",
+  "baseline_name": "IDM_MOBIL"
+}

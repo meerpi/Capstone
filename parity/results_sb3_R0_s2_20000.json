@@ -1,0 +1,48 @@
+{
+  "n_episodes": 100,
+  "crashes": 39,
+  "crash_rate": 0.39,
+  "ci_95": [
+    0.294010414853417,
+    0.49268552036763646
+  ],
+  "ci_str": "39/100 (39.0%) [29.4%, 49.3%]",
+  "mean_speed_ms": 22.408277893446297,
+  "std_speed_ms": 1.625301622165455,
+  "mean_speed_kmh": 80.66980041640667,
+  "mean_return": 17.838555959379807,
+  "std_return": 7.3546213420937425,
+  "mean_lane_changes": 0.91,
+  "std_lane_changes": 0.8613361713059541,
+  "mean_rel_speed_ms": 2.0108722268544006,
+  "std_rel_speed_ms": 1.764536822759284,
+  "action_histogram": {
+    "LANE_LEFT": {
+      "count": 386,
+      "share": 0.16609294320137694
+    },
+    "IDLE": {
+      "count": 1009,
+      "share": 0.4341652323580034
+    },
+    "LANE_RIGHT": {
+      "count": 725,
+      "share": 0.3119621342512909
+    },
+    "FASTER": {
+      "count": 38,
+      "share": 0.016351118760757316
+    },
+    "SLOWER": {
+      "count": 166,
+      "share": 0.07142857142857142
+    }
+  },
+  "dominant_action": "IDLE",
+  "dominant_action_frac": 0.4341652323580034,
+  "is_constant": false,
+  "rung": "R0",
+  "seed": 2,
+  "total_timesteps": 20000,
+  "method": "SB3_PPO"
+}

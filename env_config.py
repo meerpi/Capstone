@@ -34,7 +34,7 @@ DEFAULT_OBSERVATION_CONFIG: dict[str, Any] = {
 DEFAULT_ENV_CONFIG: dict[str, Any] = {
     "observation": DEFAULT_OBSERVATION_CONFIG,
     "policy_frequency": 5,
-    "simulation_frequency": 15,
+    "simulation_frequency": 5,
     "duration": 100,
 }
 
@@ -52,8 +52,59 @@ SCENARIO_CONFIGS: dict[str, dict[str, Any]] = {
         "normalize_reward": False,
     },
     "merge": {},
-    "roundabout": {},
-    "intersection": {},
+    "roundabout": {
+        "policy_frequency": 1,
+        "simulation_frequency": 15,
+        "duration": 11,
+        "action": {
+            "type": "DiscreteMetaAction",
+            "target_speeds": [0, 8, 16],
+        },
+        "observation": {
+            "type": "Kinematics",
+            "absolute": True,
+            "features_range": {
+                "x": [-100, 100],
+                "y": [-100, 100],
+                "vx": [-15, 15],
+                "vy": [-15, 15],
+            },
+        },
+        "collision_reward": -1.0,
+        "high_speed_reward": 0.2,
+        "lane_change_reward": -0.05,
+        "right_lane_reward": 0.0,
+    },
+    "intersection": {
+        "policy_frequency": 1,
+        "simulation_frequency": 15,
+        "duration": 13,
+        "action": {
+            "type": "DiscreteMetaAction",
+            "longitudinal": True,
+            "lateral": False,
+            "target_speeds": [0, 4.5, 9],
+        },
+        "observation": {
+            "type": "Kinematics",
+            "vehicles_count": 15,
+            "features": ["presence", "x", "y", "vx", "vy", "cos_h", "sin_h"],
+            "features_range": {
+                "x": [-100, 100],
+                "y": [-100, 100],
+                "vx": [-20, 20],
+                "vy": [-20, 20],
+            },
+            "absolute": True,
+            "flatten": False,
+            "observe_intentions": False,
+        },
+        "collision_reward": -5.0,
+        "arrived_reward": 1.0,
+        "high_speed_reward": 1.0,
+        "reward_speed_range": [7.0, 9.0],
+        "offroad_terminal": False,
+    },
 }
 
 
@@ -284,16 +335,17 @@ class TacticalOvertakingWrapper(gym.Wrapper):
         self._dwell_counters: dict[int, int] = {}
 
     def _get_action_mask(self) -> np.ndarray:
-        """Return boolean mask of shape (5,) indicating valid discrete actions."""
+        """Return boolean mask indicating valid discrete actions."""
+        n_actions = getattr(self.action_space, "n", 5)
         unwrapped = self.env.unwrapped
         if hasattr(unwrapped, "get_available_actions"):
             avail = unwrapped.get_available_actions()
-            mask = np.zeros(5, dtype=bool)
+            mask = np.zeros(n_actions, dtype=bool)
             for a in avail:
-                if 0 <= a < 5:
+                if 0 <= a < n_actions:
                     mask[a] = True
             return mask
-        return np.ones(5, dtype=bool)
+        return np.ones(n_actions, dtype=bool)
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
@@ -449,6 +501,7 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         constrained_mode: bool = False,
         overtake_dwell_steps: int = 5,
         max_overtake_lon_dist: float = 30.0,
+        lateral_debounce_steps: int = 0,
     ) -> None:
         super().__init__(env)
         self.collision_penalty = collision_penalty
@@ -463,6 +516,7 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         self.constrained_mode = constrained_mode
         self.overtake_dwell_steps = overtake_dwell_steps
         self.max_overtake_lon_dist = max_overtake_lon_dist
+        self.lateral_debounce_steps = lateral_debounce_steps
         self._was_crashed = False
 
         self.obs_dim = (
@@ -479,6 +533,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         self._dwell_counters: dict[int, int] = {}
         self._prev_lane: int | None = None
         self._prev_action: int | None = None
+        self._lateral_lock_dir: int | None = None
+        self._lateral_lock_timer: int = 0
         self._steps_blocked: int = 0
         self._prev_heading: float | None = None
         self._current_yaw_rate: float = 0.0
@@ -623,21 +679,28 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         return obs
 
     def _get_action_mask(self) -> np.ndarray | None:
-        """Return boolean mask of shape (5,) indicating valid discrete actions, or None for continuous actions."""
+        """Return boolean mask indicating valid discrete actions, or None for continuous actions."""
         if isinstance(self.action_space, gym.spaces.Box):
             return None
+        n_actions = getattr(self.action_space, "n", 5)
         unwrapped = self.env.unwrapped
+        mask = np.ones(n_actions, dtype=bool)
         if hasattr(unwrapped, "get_available_actions"):
             try:
                 avail = unwrapped.get_available_actions()
-                mask = np.zeros(5, dtype=bool)
+                mask = np.zeros(n_actions, dtype=bool)
                 for a in avail:
-                    if 0 <= a < 5:
+                    if 0 <= a < n_actions:
                         mask[a] = True
-                return mask
             except (NotImplementedError, AttributeError):
-                return None
-        return np.ones(5, dtype=bool)
+                mask = np.ones(n_actions, dtype=bool)
+
+        # Apply lateral action debounce lockout if active (0: LANE_LEFT, 2: LANE_RIGHT)
+        if self.lateral_debounce_steps > 0 and self._lateral_lock_timer > 0 and self._lateral_lock_dir is not None:
+            opp = 2 if self._lateral_lock_dir == 0 else 0
+            if opp < n_actions:
+                mask[opp] = False
+        return mask
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
@@ -648,6 +711,8 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
         self._dwell_counters.clear()
         self._steps_blocked = 0
         self._prev_action = None
+        self._lateral_lock_dir = None
+        self._lateral_lock_timer = 0
 
         unwrapped = self.env.unwrapped
         ego = unwrapped.vehicle
@@ -681,7 +746,23 @@ class TacticalLaneObservationWrapper(gym.Wrapper):
     def step(
         self, action: Any
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
-        _, base_reward, terminated, truncated, info = self.env.step(action)
+        # Debounce rapid opposing lateral action if within lock window
+        filtered_action = action
+        if self.lateral_debounce_steps > 0 and self._lateral_lock_timer > 0 and self._lateral_lock_dir is not None:
+            opp = 2 if self._lateral_lock_dir == 0 else 0
+            if action == opp:
+                filtered_action = 1  # Debounce opposing reversal to IDLE
+
+        if self.lateral_debounce_steps > 0:
+            if filtered_action in (0, 2):
+                self._lateral_lock_dir = filtered_action
+                self._lateral_lock_timer = self.lateral_debounce_steps
+            elif self._lateral_lock_timer > 0:
+                self._lateral_lock_timer -= 1
+                if self._lateral_lock_timer == 0:
+                    self._lateral_lock_dir = None
+
+        _, base_reward, terminated, truncated, info = self.env.step(filtered_action)
 
         unwrapped = self.env.unwrapped
         ego = unwrapped.vehicle
@@ -924,6 +1005,8 @@ def make_optimal_env(
     constrained_mode: bool = False,
     overtake_dwell_steps: int = 5,
     max_overtake_lon_dist: float = 30.0,
+    target_speeds: list[float] | None = None,
+    lateral_debounce_steps: int = 0,
 ) -> gym.Env:
     """Create an environment with TacticalLaneObservation + FrameStack wrappers.
 
@@ -945,6 +1028,8 @@ def make_optimal_env(
         constrained_mode: If True, strips collision penalty from reward and emits info['cost'].
         overtake_dwell_steps: Dwell steps required before crediting overtake (default: 5).
         max_overtake_lon_dist: Maximum longitudinal distance behind ego for overtake credit (default: 30.0).
+        target_speeds: Optional list of target speeds for DiscreteMetaAction (default: None = [20, 25, 30]).
+        lateral_debounce_steps: Minimum lock steps preventing opposing lateral reversals (default: 5).
 
     Returns:
         Wrapped environment producing 90-dim (K=3) or 30-dim (K=0) observations
@@ -965,6 +1050,11 @@ def make_optimal_env(
         "normalize_reward": False,
         "reward_speed_range": [18, 30],
     })
+    if target_speeds is not None:
+        cfg["action"] = {
+            "type": "DiscreteMetaAction",
+            "target_speeds": target_speeds,
+        }
 
     env = gym.make(
         "highway-fast-v0",
@@ -980,6 +1070,7 @@ def make_optimal_env(
         constrained_mode=constrained_mode,
         overtake_dwell_steps=overtake_dwell_steps,
         max_overtake_lon_dist=max_overtake_lon_dist,
+        lateral_debounce_steps=lateral_debounce_steps,
     )
 
     if frame_stack_k > 0:

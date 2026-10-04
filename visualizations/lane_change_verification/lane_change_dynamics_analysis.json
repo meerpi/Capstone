@@ -1,0 +1,1754 @@
+[
+  {
+    "seed": 2000,
+    "total_steps": 500,
+    "crashed": false,
+    "total_overtakes": 0,
+    "total_lane_changes": 0,
+    "lane_changes_per_step": 0.0,
+    "min_interval_steps": null,
+    "mean_interval_steps": null,
+    "median_interval_steps": null,
+    "oscillations_within_3_steps": 0,
+    "oscillations_within_5_steps": 0,
+    "oscillations_within_10_steps": 0,
+    "rapid_events": [],
+    "purposeful_overtake_repositions": 0,
+    "purposeful_ratio": 1.0,
+    "lane_changes": [],
+    "gif_path": "visualizations/lane_change_verification/optimal_final_seed2000.gif",
+    "mp4_path": "visualizations/lane_change_verification/optimal_final_seed2000.mp4"
+  },
+  {
+    "seed": 2001,
+    "total_steps": 500,
+    "crashed": false,
+    "total_overtakes": 0,
+    "total_lane_changes": 36,
+    "lane_changes_per_step": 0.072,
+    "min_interval_steps": 1,
+    "mean_interval_steps": 14.028571428571428,
+    "median_interval_steps": 3.0,
+    "oscillations_within_3_steps": 15,
+    "oscillations_within_5_steps": 20,
+    "oscillations_within_10_steps": 22,
+    "rapid_events": [
+      {
+        "step": 13,
+        "delta_steps": 5,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 63,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 120,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 121,
+        "delta_steps": 1,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 122,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 160,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 169,
+        "delta_steps": 9,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 172,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 173,
+        "delta_steps": 1,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 174,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 210,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 402,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 404,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 408,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 410,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 427,
+        "delta_steps": 6,
+        "lane_cycle": "2 -> 3 -> 2"
+      },
+      {
+        "step": 437,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 438,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 469,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 471,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 475,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 477,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      }
+    ],
+    "purposeful_overtake_repositions": 11,
+    "purposeful_ratio": 0.3055555555555556,
+    "lane_changes": [
+      {
+        "step": 8,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.6159122085048,
+        "lead_dist_before": 36.10713281966164,
+        "lead_speed_before": 74.19205789092085,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 13,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 37.00291848013232,
+        "lead_dist_before": 64.2425476631401,
+        "lead_speed_before": 75.3901399156723,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 61,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.58944905288778,
+        "lead_dist_before": 51.057791829302346,
+        "lead_speed_before": 61.64865414479447,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 63,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 39.373088467950126,
+        "lead_dist_before": 23.487572107108917,
+        "lead_speed_before": 66.65679055910546,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 118,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.589599338139486,
+        "lead_dist_before": 47.945348330401885,
+        "lead_speed_before": 68.82318810742937,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 120,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 39.373155261395326,
+        "lead_dist_before": 31.12627334645788,
+        "lead_speed_before": 71.07908462771113,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 121,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 38.248770174263555,
+        "lead_dist_before": 53.19812707657525,
+        "lead_speed_before": 68.99292428715431,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 122,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 37.4991801161757,
+        "lead_dist_before": 34.9865804330251,
+        "lead_speed_before": 71.1443576192611,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 158,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.98266794875182,
+        "lead_dist_before": 49.82540467883928,
+        "lead_speed_before": 70.59189604624835,
+        "action": "SLOWER"
+      },
+      {
+        "step": 160,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.54785242166747,
+        "lead_dist_before": 87.51666027298074,
+        "lead_speed_before": 73.07002036779443,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 169,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.47408933800201,
+        "lead_dist_before": 44.417659124019906,
+        "lead_speed_before": 70.94561227414914,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 172,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 38.214544989037634,
+        "lead_dist_before": 92.47281550242008,
+        "lead_speed_before": 73.29216579052508,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 173,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 37.47636332602509,
+        "lead_dist_before": 51.8906251870975,
+        "lead_speed_before": 71.06447814329876,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 174,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.98424221735006,
+        "lead_dist_before": 96.5716935076291,
+        "lead_speed_before": 73.32810732872275,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 208,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.98266827627518,
+        "lead_dist_before": 48.186869248299445,
+        "lead_speed_before": 71.93276219168794,
+        "action": "SLOWER"
+      },
+      {
+        "step": 210,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.54785256723342,
+        "lead_dist_before": 91.99233198479772,
+        "lead_speed_before": 73.92011024974072,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 398,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.98844552798238,
+        "lead_dist_before": 35.89609224525816,
+        "lead_speed_before": 74.2015011282562,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 402,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.99771763515702,
+        "lead_dist_before": 93.78098111495342,
+        "lead_speed_before": 75.76833512803867,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 404,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.99898561562534,
+        "lead_dist_before": 25.418080436634,
+        "lead_speed_before": 74.24171231279075,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 408,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.99979962777785,
+        "lead_dist_before": 83.67728402703256,
+        "lead_speed_before": 75.80347655864384,
+        "action": "IDLE"
+      },
+      {
+        "step": 410,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.99991094567905,
+        "lead_dist_before": 14.808986818594349,
+        "lead_speed_before": 74.28086667692243,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 412,
+        "from_lane": 1,
+        "to_lane": 2,
+        "speed_kmh": 97.9999604203018,
+        "lead_dist_before": 77.16274989864314,
+        "lead_speed_before": 75.82641324547583,
+        "action": "SLOWER"
+      },
+      {
+        "step": 421,
+        "from_lane": 2,
+        "to_lane": 3,
+        "speed_kmh": 43.58989888407227,
+        "lead_dist_before": 93.75135013481508,
+        "lead_speed_before": 76.59800700531468,
+        "action": "IDLE"
+      },
+      {
+        "step": 427,
+        "from_lane": 3,
+        "to_lane": 2,
+        "speed_kmh": 36.666328571441184,
+        "lead_dist_before": 61.555019140703735,
+        "lead_speed_before": 78.34737596547708,
+        "action": "IDLE"
+      },
+      {
+        "step": 431,
+        "from_lane": 2,
+        "to_lane": 1,
+        "speed_kmh": 36.13162045855629,
+        "lead_dist_before": 116.82881054680865,
+        "lead_speed_before": 76.64091278305303,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 434,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.03899865438705,
+        "lead_dist_before": 107.24167919393471,
+        "lead_speed_before": 75.9459474849416,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 437,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.01155515685542,
+        "lead_dist_before": 46.57440814610118,
+        "lead_speed_before": 74.44504115533651,
+        "action": "IDLE"
+      },
+      {
+        "step": 438,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.007703437903615,
+        "lead_dist_before": 116.60909122438602,
+        "lead_speed_before": 75.96654233979145,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 465,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.96100147591065,
+        "lead_dist_before": 41.9779879690509,
+        "lead_speed_before": 74.59699939355916,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 469,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.9922965878342,
+        "lead_dist_before": 105.60700104894818,
+        "lead_speed_before": 76.11542803871704,
+        "action": "IDLE"
+      },
+      {
+        "step": 471,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.99657626125963,
+        "lead_dist_before": 31.637004759637193,
+        "lead_speed_before": 74.6274233426423,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 475,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.99932370592782,
+        "lead_dist_before": 95.6191084937991,
+        "lead_speed_before": 76.14220316702814,
+        "action": "IDLE"
+      },
+      {
+        "step": 477,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.99969942485681,
+        "lead_dist_before": 21.15573695791545,
+        "lead_speed_before": 74.65714996593887,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 481,
+        "from_lane": 1,
+        "to_lane": 2,
+        "speed_kmh": 107.99994062713222,
+        "lead_dist_before": 85.4953379898343,
+        "lead_speed_before": 76.16836429679839,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 483,
+        "from_lane": 2,
+        "to_lane": 3,
+        "speed_kmh": 107.99997361205877,
+        "lead_dist_before": 102.22075423119304,
+        "lead_speed_before": 76.83919539448596,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 499,
+        "from_lane": 3,
+        "to_lane": 2,
+        "speed_kmh": 41.05993323558001,
+        "lead_dist_before": 55.54966254251849,
+        "lead_speed_before": 78.57383925249472,
+        "action": "LANE_LEFT"
+      }
+    ],
+    "gif_path": "visualizations/lane_change_verification/optimal_final_seed2001.gif",
+    "mp4_path": "visualizations/lane_change_verification/optimal_final_seed2001.mp4"
+  },
+  {
+    "seed": 2002,
+    "total_steps": 500,
+    "crashed": false,
+    "total_overtakes": 0,
+    "total_lane_changes": 9,
+    "lane_changes_per_step": 0.018,
+    "min_interval_steps": 1,
+    "mean_interval_steps": 2.125,
+    "median_interval_steps": 2.0,
+    "oscillations_within_3_steps": 6,
+    "oscillations_within_5_steps": 6,
+    "oscillations_within_10_steps": 6,
+    "rapid_events": [
+      {
+        "step": 16,
+        "delta_steps": 1,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 17,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 20,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 21,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 24,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 25,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      }
+    ],
+    "purposeful_overtake_repositions": 5,
+    "purposeful_ratio": 0.5555555555555556,
+    "lane_changes": [
+      {
+        "step": 8,
+        "from_lane": 3,
+        "to_lane": 2,
+        "speed_kmh": 43.6159122085048,
+        "lead_dist_before": 18.13585262011327,
+        "lead_speed_before": 81.32635019696703,
+        "action": "IDLE"
+      },
+      {
+        "step": 11,
+        "from_lane": 2,
+        "to_lane": 1,
+        "speed_kmh": 38.25656658029772,
+        "lead_dist_before": 69.4669284052369,
+        "lead_speed_before": 76.10798574913338,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 15,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.44574154672547,
+        "lead_dist_before": 54.10961696347388,
+        "lead_speed_before": 56.49277276242072,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 16,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.29716103115032,
+        "lead_dist_before": 35.414880531973125,
+        "lead_speed_before": 53.56888432945664,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 17,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.19810735410021,
+        "lead_dist_before": 93.51693503089618,
+        "lead_speed_before": 51.8415337942893,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 20,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.05869847528895,
+        "lead_dist_before": 39.886510863262004,
+        "lead_speed_before": 52.839791107006505,
+        "action": "IDLE"
+      },
+      {
+        "step": 21,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.0391323168593,
+        "lead_dist_before": 98.14187623463116,
+        "lead_speed_before": 56.73678709808687,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 24,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.011594760550906,
+        "lead_dist_before": 43.90520731055733,
+        "lead_speed_before": 52.934676948800885,
+        "action": "IDLE"
+      },
+      {
+        "step": 25,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.00772984036727,
+        "lead_dist_before": 44.8162198075448,
+        "lead_speed_before": 52.79274515378587,
+        "action": "LANE_LEFT"
+      }
+    ],
+    "gif_path": "visualizations/lane_change_verification/optimal_final_seed2002.gif",
+    "mp4_path": "visualizations/lane_change_verification/optimal_final_seed2002.mp4"
+  },
+  {
+    "seed": 2003,
+    "total_steps": 500,
+    "crashed": false,
+    "total_overtakes": 1,
+    "total_lane_changes": 3,
+    "lane_changes_per_step": 0.006,
+    "min_interval_steps": 2,
+    "mean_interval_steps": 3.0,
+    "median_interval_steps": 3.0,
+    "oscillations_within_3_steps": 0,
+    "oscillations_within_5_steps": 0,
+    "oscillations_within_10_steps": 0,
+    "rapid_events": [],
+    "purposeful_overtake_repositions": 2,
+    "purposeful_ratio": 0.6666666666666666,
+    "lane_changes": [
+      {
+        "step": 10,
+        "from_lane": 3,
+        "to_lane": 2,
+        "speed_kmh": 39.38484987044658,
+        "lead_dist_before": 31.196056343814064,
+        "lead_speed_before": 59.88897694123389,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 12,
+        "from_lane": 2,
+        "to_lane": 1,
+        "speed_kmh": 37.50437772019848,
+        "lead_dist_before": 27.76135859443184,
+        "lead_speed_before": 73.91436995961325,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 16,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.29716103115032,
+        "lead_dist_before": 91.11801434262827,
+        "lead_speed_before": 73.04655056063011,
+        "action": "LANE_LEFT"
+      }
+    ],
+    "gif_path": "visualizations/lane_change_verification/optimal_final_seed2003.gif",
+    "mp4_path": "visualizations/lane_change_verification/optimal_final_seed2003.mp4"
+  },
+  {
+    "seed": 2004,
+    "total_steps": 500,
+    "crashed": false,
+    "total_overtakes": 0,
+    "total_lane_changes": 82,
+    "lane_changes_per_step": 0.164,
+    "min_interval_steps": 1,
+    "mean_interval_steps": 5.814814814814815,
+    "median_interval_steps": 3.0,
+    "oscillations_within_3_steps": 55,
+    "oscillations_within_5_steps": 61,
+    "oscillations_within_10_steps": 67,
+    "rapid_events": [
+      {
+        "step": 13,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 14,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 17,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 18,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 21,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 22,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 25,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 27,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 30,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 31,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 62,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 63,
+        "delta_steps": 1,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 64,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 67,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 68,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 93,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 102,
+        "delta_steps": 9,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 105,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 108,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 109,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 134,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 143,
+        "delta_steps": 9,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 146,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 174,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 183,
+        "delta_steps": 9,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 186,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 215,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 224,
+        "delta_steps": 9,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 227,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 255,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 264,
+        "delta_steps": 9,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 265,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 268,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 269,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 294,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 303,
+        "delta_steps": 9,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 304,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 307,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 308,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 334,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 336,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 340,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 353,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 354,
+        "delta_steps": 1,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 355,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 358,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 361,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 390,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 392,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 396,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 409,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 410,
+        "delta_steps": 1,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 411,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 414,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 417,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 419,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 420,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 449,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 451,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 455,
+        "delta_steps": 4,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 468,
+        "delta_steps": 2,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 469,
+        "delta_steps": 1,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 470,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 473,
+        "delta_steps": 3,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 476,
+        "delta_steps": 3,
+        "lane_cycle": "0 -> 1 -> 0"
+      },
+      {
+        "step": 478,
+        "delta_steps": 2,
+        "lane_cycle": "1 -> 0 -> 1"
+      },
+      {
+        "step": 479,
+        "delta_steps": 1,
+        "lane_cycle": "0 -> 1 -> 0"
+      }
+    ],
+    "purposeful_overtake_repositions": 19,
+    "purposeful_ratio": 0.23170731707317074,
+    "lane_changes": [
+      {
+        "step": 8,
+        "from_lane": 2,
+        "to_lane": 1,
+        "speed_kmh": 43.6159122085048,
+        "lead_dist_before": 110.60528132064127,
+        "lead_speed_before": 80.70207782009372,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 11,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 38.25656658029772,
+        "lead_dist_before": 32.68589825628331,
+        "lead_speed_before": 48.03890036036133,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 13,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 37.00291848013232,
+        "lead_dist_before": 33.487776898865775,
+        "lead_speed_before": 45.836453612779685,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 14,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.66861232008821,
+        "lead_dist_before": 78.83534973455389,
+        "lead_speed_before": 45.99700379487037,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 17,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.19810735410021,
+        "lead_dist_before": 36.53975468801053,
+        "lead_speed_before": 50.84674416835258,
+        "action": "IDLE"
+      },
+      {
+        "step": 18,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.13207156940014,
+        "lead_dist_before": 81.65008339088146,
+        "lead_speed_before": 47.6032662154578,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 21,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.0391323168593,
+        "lead_dist_before": 40.73304870576749,
+        "lead_speed_before": 55.41310537915967,
+        "action": "IDLE"
+      },
+      {
+        "step": 22,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.02608821123953,
+        "lead_dist_before": 84.94861480141509,
+        "lead_speed_before": 50.1023873620434,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 25,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.00772984036727,
+        "lead_dist_before": 45.93193079446701,
+        "lead_speed_before": 59.24702026957381,
+        "action": "IDLE"
+      },
+      {
+        "step": 27,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.00343548460768,
+        "lead_dist_before": 89.93472372884167,
+        "lead_speed_before": 53.5168386121351,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 30,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.00101792136524,
+        "lead_dist_before": 53.5328520288559,
+        "lead_speed_before": 62.99572065665404,
+        "action": "IDLE"
+      },
+      {
+        "step": 31,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.0006786142435,
+        "lead_dist_before": 94.61014665461454,
+        "lead_speed_before": 56.119954113092554,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 60,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.58219647999103,
+        "lead_dist_before": 41.936630671674095,
+        "lead_speed_before": 71.25824794780915,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 62,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 39.36986510221824,
+        "lead_dist_before": 74.7145071466361,
+        "lead_speed_before": 67.20039666486713,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 63,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 38.24657673481216,
+        "lead_dist_before": 47.60147611484797,
+        "lead_speed_before": 71.5135973721089,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 64,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 37.497717823208106,
+        "lead_dist_before": 78.15167804365711,
+        "lead_speed_before": 67.52798170503745,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 67,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.44376824391351,
+        "lead_dist_before": 55.7433557991003,
+        "lead_speed_before": 71.80115517053481,
+        "action": "IDLE"
+      },
+      {
+        "step": 68,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.29584549594234,
+        "lead_dist_before": 85.6240839317918,
+        "lead_speed_before": 68.11500834482412,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 91,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.91227937697661,
+        "lead_dist_before": 47.711077659345335,
+        "lead_speed_before": 72.84439790661006,
+        "action": "SLOWER"
+      },
+      {
+        "step": 93,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.51656861198961,
+        "lead_dist_before": 68.40231828039822,
+        "lead_speed_before": 70.54273915004318,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 102,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.473275574319906,
+        "lead_dist_before": 43.679686339434056,
+        "lead_speed_before": 73.12835891456993,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 105,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 38.21430387387256,
+        "lead_dist_before": 71.85275381338039,
+        "lead_speed_before": 71.29649436955411,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 108,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.65609003670298,
+        "lead_dist_before": 55.85978352398439,
+        "lead_speed_before": 73.25617241661995,
+        "action": "IDLE"
+      },
+      {
+        "step": 109,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.43739335780199,
+        "lead_dist_before": 79.77570207685653,
+        "lead_speed_before": 71.51362247551755,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 132,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.91229198956886,
+        "lead_dist_before": 49.213309187420464,
+        "lead_speed_before": 73.64272200920914,
+        "action": "SLOWER"
+      },
+      {
+        "step": 134,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.51657421758615,
+        "lead_dist_before": 66.19962436879109,
+        "lead_speed_before": 72.60530432432134,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 143,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.47327572013434,
+        "lead_dist_before": 45.624793072432,
+        "lead_speed_before": 73.77412461554567,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 146,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 38.21430391707684,
+        "lead_dist_before": 70.91280679982674,
+        "lead_speed_before": 73.01142773242404,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 172,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.91231147649123,
+        "lead_dist_before": 49.25069090333602,
+        "lead_speed_before": 74.03956376487982,
+        "action": "SLOWER"
+      },
+      {
+        "step": 174,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.51658287844054,
+        "lead_dist_before": 64.8186910148047,
+        "lead_speed_before": 73.76716267822691,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 183,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.47327594542303,
+        "lead_dist_before": 45.889755836111135,
+        "lead_speed_before": 74.1196567683226,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 186,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 38.21430398382905,
+        "lead_dist_before": 70.26103616437354,
+        "lead_speed_before": 74.03011767844784,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 213,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.94154098432867,
+        "lead_dist_before": 48.13236841078299,
+        "lead_speed_before": 74.30429549656941,
+        "action": "SLOWER"
+      },
+      {
+        "step": 215,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.52957377081275,
+        "lead_dist_before": 63.700305199385866,
+        "lead_speed_before": 74.55925678914022,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 224,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.47361386834609,
+        "lead_dist_before": 44.91986858273492,
+        "lead_speed_before": 74.36355755724657,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 227,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 38.214404109139586,
+        "lead_dist_before": 69.64269635242795,
+        "lead_speed_before": 74.74357976891585,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 253,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.91231147913645,
+        "lead_dist_before": 49.389556916335096,
+        "lead_speed_before": 74.50666745177843,
+        "action": "SLOWER"
+      },
+      {
+        "step": 255,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.51658287961621,
+        "lead_dist_before": 65.93435335582558,
+        "lead_speed_before": 75.11428713565141,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 264,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.473275945453615,
+        "lead_dist_before": 46.305569757033254,
+        "lead_speed_before": 74.5574162356132,
+        "action": "IDLE"
+      },
+      {
+        "step": 265,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 40.98218396363574,
+        "lead_dist_before": 67.63842932319585,
+        "lead_speed_before": 75.22998435125494,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 268,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 37.476202655892074,
+        "lead_dist_before": 54.02605607062651,
+        "lead_speed_before": 74.57550865714666,
+        "action": "IDLE"
+      },
+      {
+        "step": 269,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.984135103928054,
+        "lead_dist_before": 75.93833791892439,
+        "lead_speed_before": 75.27414962351686,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 292,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 97.9123407068763,
+        "lead_dist_before": 48.71997252660094,
+        "lead_speed_before": 74.68077834032029,
+        "action": "SLOWER"
+      },
+      {
+        "step": 294,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 93.51659586972279,
+        "lead_dist_before": 66.84793200251966,
+        "lead_speed_before": 75.52610773991125,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 303,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.47327628335609,
+        "lead_dist_before": 45.74121509860447,
+        "lead_speed_before": 74.72745881711275,
+        "action": "IDLE"
+      },
+      {
+        "step": 304,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 40.982184188904064,
+        "lead_dist_before": 68.77438537931516,
+        "lead_speed_before": 75.61661900639086,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 307,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 37.47620272263824,
+        "lead_dist_before": 53.499376821930355,
+        "lead_speed_before": 74.74422503128403,
+        "action": "IDLE"
+      },
+      {
+        "step": 308,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.984135148425494,
+        "lead_dist_before": 77.15942187602695,
+        "lead_speed_before": 75.65136813605383,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 330,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.86851106032039,
+        "lead_dist_before": 50.111883533500304,
+        "lead_speed_before": 74.83869572210595,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 334,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.97402687611267,
+        "lead_dist_before": 66.35615084954293,
+        "lead_speed_before": 75.85916871455134,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 336,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.98845638938342,
+        "lead_dist_before": 39.87270662673336,
+        "lead_speed_before": 74.86283530950358,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 340,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.99771978061895,
+        "lead_dist_before": 56.2895434215352,
+        "lead_speed_before": 75.9031018641146,
+        "action": "IDLE"
+      },
+      {
+        "step": 351,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.58987355196931,
+        "lead_dist_before": 28.115704359137908,
+        "lead_speed_before": 74.92232702355605,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 353,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 39.37327713420858,
+        "lead_dist_before": 56.13910170021927,
+        "lead_speed_before": 75.99371598947933,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 354,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 38.24885142280572,
+        "lead_dist_before": 34.37608187315641,
+        "lead_speed_before": 74.934081441605,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 355,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 37.49923428187048,
+        "lead_dist_before": 60.54401352213995,
+        "lead_speed_before": 76.00713079686743,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 358,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.44421756499867,
+        "lead_dist_before": 43.254655825147665,
+        "lead_speed_before": 74.94968033700351,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 361,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.13162001925887,
+        "lead_dist_before": 75.1808673541118,
+        "lead_speed_before": 76.04657823158794,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 386,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.91225822815926,
+        "lead_dist_before": 48.43111812362554,
+        "lead_speed_before": 75.05653392592524,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 390,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.98266829198207,
+        "lead_dist_before": 67.95563966276177,
+        "lead_speed_before": 76.22184362689947,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 392,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.99229701865869,
+        "lead_dist_before": 38.142265375626266,
+        "lead_speed_before": 75.07889902883623,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 396,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.99847842343875,
+        "lead_dist_before": 58.01695539347884,
+        "lead_speed_before": 76.25522003422748,
+        "action": "IDLE"
+      },
+      {
+        "step": 407,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.58988232265408,
+        "lead_dist_before": 26.556511933986712,
+        "lead_speed_before": 75.1339839894539,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 409,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 39.3732810322907,
+        "lead_dist_before": 58.11350118325413,
+        "lead_speed_before": 76.32450471157289,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 410,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 38.24885402152714,
+        "lead_dist_before": 32.85211542425304,
+        "lead_speed_before": 75.1448582350162,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 411,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 37.499236014351425,
+        "lead_dist_before": 62.555080251754134,
+        "lead_speed_before": 76.3348128870818,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 414,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.44421807832635,
+        "lead_dist_before": 41.77742966576693,
+        "lead_speed_before": 75.15928278099355,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 417,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.131620171355955,
+        "lead_dist_before": 77.29989186987291,
+        "lead_speed_before": 76.365201553975,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 419,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.05849785393598,
+        "lead_dist_before": 53.96699604230707,
+        "lead_speed_before": 75.17719342704417,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 420,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.038998569290655,
+        "lead_dist_before": 84.53677157016637,
+        "lead_speed_before": 76.38010165318003,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 445,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.96100288474918,
+        "lead_dist_before": 46.08148026317781,
+        "lead_speed_before": 75.2681594565929,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 449,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.9922968661233,
+        "lead_dist_before": 69.6899608520173,
+        "lead_speed_before": 76.51480592806206,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 451,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 107.9965763849437,
+        "lead_dist_before": 35.96282054137009,
+        "lead_speed_before": 75.28863049358068,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 455,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 107.99932373035925,
+        "lead_dist_before": 59.83507545373345,
+        "lead_speed_before": 76.5407257685028,
+        "action": "IDLE"
+      },
+      {
+        "step": 466,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 43.58989209526425,
+        "lead_dist_before": 24.554970834823962,
+        "lead_speed_before": 75.33894601083422,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 468,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 39.373285375673,
+        "lead_dist_before": 60.132363166986806,
+        "lead_speed_before": 76.59480730800853,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 469,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 38.24885691711533,
+        "lead_dist_before": 30.884679946338792,
+        "lead_speed_before": 75.34886090912077,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 470,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 37.499237944743555,
+        "lead_dist_before": 64.60391321554539,
+        "lead_speed_before": 76.60288546468361,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 473,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.44421865029439,
+        "lead_dist_before": 39.855220364787556,
+        "lead_speed_before": 75.36200378532159,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 476,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.13162034082797,
+        "lead_dist_before": 79.43716869414425,
+        "lead_speed_before": 76.62674825592681,
+        "action": "LANE_LEFT"
+      },
+      {
+        "step": 478,
+        "from_lane": 0,
+        "to_lane": 1,
+        "speed_kmh": 36.05849792925687,
+        "lead_dist_before": 52.10091965248239,
+        "lead_speed_before": 75.37830857706908,
+        "action": "LANE_RIGHT"
+      },
+      {
+        "step": 479,
+        "from_lane": 1,
+        "to_lane": 0,
+        "speed_kmh": 36.03899861950459,
+        "lead_dist_before": 86.71746245619056,
+        "lead_speed_before": 76.63847497963519,
+        "action": "LANE_LEFT"
+      }
+    ],
+    "gif_path": "visualizations/lane_change_verification/optimal_final_seed2004.gif",
+    "mp4_path": "visualizations/lane_change_verification/optimal_final_seed2004.mp4"
+  }
+]

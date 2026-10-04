@@ -1,0 +1,1948 @@
+{
+  "R0": {
+    "random": {
+      "n_episodes": 100,
+      "crashes": 97,
+      "crash_rate": 0.97,
+      "ci_95": [
+        0.91482394702572,
+        0.9937700284616936
+      ],
+      "ci_str": "97/100 (97.0%) [91.5%, 99.4%]",
+      "mean_speed_ms": 24.436336996559202,
+      "std_speed_ms": 2.4463866474015235,
+      "mean_speed_kmh": 87.97081318761313,
+      "mean_return": 8.303725523874151,
+      "std_return": 5.555318558446311,
+      "mean_lane_changes": 2.82,
+      "std_lane_changes": 2.2863945416309934,
+      "mean_rel_speed_ms": 4.359908277706336,
+      "std_rel_speed_ms": 2.547615591224362,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 207,
+          "share": 0.18682310469314078
+        },
+        "IDLE": {
+          "count": 225,
+          "share": 0.20306859205776173
+        },
+        "LANE_RIGHT": {
+          "count": 219,
+          "share": 0.1976534296028881
+        },
+        "FASTER": {
+          "count": 242,
+          "share": 0.2184115523465704
+        },
+        "SLOWER": {
+          "count": 215,
+          "share": 0.194043321299639
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 0.2184115523465704,
+      "is_constant": false,
+      "rung": "R0",
+      "baseline_name": "random"
+    },
+    "always_IDLE": {
+      "n_episodes": 100,
+      "crashes": 96,
+      "crash_rate": 0.96,
+      "ci_95": [
+        0.9007428432873401,
+        0.9889955060138118
+      ],
+      "ci_str": "96/100 (96.0%) [90.1%, 98.9%]",
+      "mean_speed_ms": 24.170269984169316,
+      "std_speed_ms": 0.7813500529493352,
+      "mean_speed_kmh": 87.01297194300955,
+      "mean_return": 11.472000000000005,
+      "std_return": 6.172045798058643,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 3.9575585727664127,
+      "std_rel_speed_ms": 0.7175549689251095,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 1475,
+          "share": 1.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R0",
+      "baseline_name": "always_IDLE"
+    },
+    "always_SLOWER": {
+      "n_episodes": 100,
+      "crashes": 3,
+      "crash_rate": 0.03,
+      "ci_95": [
+        0.006229971538306395,
+        0.08517605297428002
+      ],
+      "ci_str": "3/100 (3.0%) [0.6%, 8.5%]",
+      "mean_speed_ms": 20.015198847282264,
+      "std_speed_ms": 0.06287422820176954,
+      "mean_speed_kmh": 72.05471585021616,
+      "mean_return": 20.700221169036332,
+      "std_return": 1.722349816062066,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": -0.5341695721050292,
+      "std_rel_speed_ms": 0.23316279048093486,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 2969,
+          "share": 1.0
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R0",
+      "baseline_name": "always_SLOWER"
+    },
+    "always_FASTER": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 28.0427038060292,
+      "std_speed_ms": 1.5658327648060613,
+      "mean_speed_kmh": 100.95373370170512,
+      "mean_return": 6.608696073563193,
+      "std_return": 3.8630329714252496,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 8.037917841296618,
+      "std_rel_speed_ms": 1.5544216438487233,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 780,
+          "share": 1.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R0",
+      "baseline_name": "always_FASTER"
+    },
+    "always_LANE_RIGHT": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 23.92837022370401,
+      "std_speed_ms": 0.9210293930741009,
+      "mean_speed_kmh": 86.14213280533444,
+      "mean_return": 8.786637208402626,
+      "std_return": 5.577803870684718,
+      "mean_lane_changes": 1.09,
+      "std_lane_changes": 0.8377947242612597,
+      "mean_rel_speed_ms": 3.8205836302064076,
+      "std_rel_speed_ms": 0.8613089105441528,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 1105,
+          "share": 1.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R0",
+      "baseline_name": "always_LANE_RIGHT"
+    },
+    "IDM_MOBIL": {
+      "n_episodes": 100,
+      "crashes": 72,
+      "crash_rate": 0.72,
+      "ci_95": [
+        0.6213329952827327,
+        0.8052063725088184
+      ],
+      "ci_str": "72/100 (72.0%) [62.1%, 80.5%]",
+      "mean_speed_ms": 24.796738572471597,
+      "std_speed_ms": 2.389934945326812,
+      "mean_speed_kmh": 89.26825886089775,
+      "mean_return": 14.349157045510852,
+      "std_return": 8.297825405840516,
+      "mean_lane_changes": 9.66,
+      "std_lane_changes": 5.196575795656212,
+      "mean_rel_speed_ms": 4.538137012683979,
+      "std_rel_speed_ms": 2.3689096763335806,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 468,
+          "share": 0.2663631189527604
+        },
+        "IDLE": {
+          "count": 351,
+          "share": 0.1997723392145703
+        },
+        "LANE_RIGHT": {
+          "count": 498,
+          "share": 0.28343767785998863
+        },
+        "FASTER": {
+          "count": 84,
+          "share": 0.04780876494023904
+        },
+        "SLOWER": {
+          "count": 356,
+          "share": 0.20261809903244166
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 0.28343767785998863,
+      "is_constant": false,
+      "rung": "R0",
+      "baseline_name": "IDM_MOBIL"
+    }
+  },
+  "R2": {
+    "random": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 23.17105503099846,
+      "std_speed_ms": 2.603829859339393,
+      "mean_speed_kmh": 83.41579811159446,
+      "mean_return": 4.7191087030655225,
+      "std_return": 3.645105070344529,
+      "mean_lane_changes": 1.67,
+      "std_lane_changes": 1.2965724044572289,
+      "mean_rel_speed_ms": 4.5439842678285745,
+      "std_rel_speed_ms": 2.5311664610798434,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 113,
+          "share": 0.16691285081240767
+        },
+        "IDLE": {
+          "count": 140,
+          "share": 0.206794682422452
+        },
+        "LANE_RIGHT": {
+          "count": 125,
+          "share": 0.18463810930576072
+        },
+        "FASTER": {
+          "count": 149,
+          "share": 0.22008862629246675
+        },
+        "SLOWER": {
+          "count": 150,
+          "share": 0.22156573116691286
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 0.22156573116691286,
+      "is_constant": false,
+      "rung": "R2",
+      "baseline_name": "random"
+    },
+    "always_IDLE": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 23.66063402336226,
+      "std_speed_ms": 1.153660219757086,
+      "mean_speed_kmh": 85.17828248410413,
+      "mean_return": 6.312666666666668,
+      "std_return": 3.918910789719228,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 4.993070261752185,
+      "std_rel_speed_ms": 1.1720081034682872,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 855,
+          "share": 1.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R2",
+      "baseline_name": "always_IDLE"
+    },
+    "always_SLOWER": {
+      "n_episodes": 100,
+      "crashes": 53,
+      "crash_rate": 0.53,
+      "ci_95": [
+        0.4275814848900452,
+        0.6305948358056055
+      ],
+      "ci_str": "53/100 (53.0%) [42.8%, 63.1%]",
+      "mean_speed_ms": 19.836226740120452,
+      "std_speed_ms": 0.32526670965409793,
+      "mean_speed_kmh": 71.41041626443364,
+      "mean_return": 15.075221086606957,
+      "std_return": 6.502267062930735,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 0.6318394322289567,
+      "std_rel_speed_ms": 0.4584692868573249,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 2213,
+          "share": 1.0
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R2",
+      "baseline_name": "always_SLOWER"
+    },
+    "always_FASTER": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 27.37908658001982,
+      "std_speed_ms": 1.8739599018069848,
+      "mean_speed_kmh": 98.56471168807136,
+      "mean_return": 4.03933654845741,
+      "std_return": 2.523185236238594,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 8.758569864796241,
+      "std_rel_speed_ms": 1.914418830051309,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 512,
+          "share": 1.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R2",
+      "baseline_name": "always_FASTER"
+    },
+    "always_LANE_RIGHT": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 23.41709329288359,
+      "std_speed_ms": 1.4610598766532306,
+      "mean_speed_kmh": 84.30153585438092,
+      "mean_return": 4.543324005779566,
+      "std_return": 3.2472374952150136,
+      "mean_lane_changes": 1.09,
+      "std_lane_changes": 0.8377947242612597,
+      "mean_rel_speed_ms": 4.791895527319696,
+      "std_rel_speed_ms": 1.4588011760496595,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 614,
+          "share": 1.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R2",
+      "baseline_name": "always_LANE_RIGHT"
+    },
+    "IDM_MOBIL": {
+      "n_episodes": 100,
+      "crashes": 91,
+      "crash_rate": 0.91,
+      "ci_95": [
+        0.8360177449703647,
+        0.9580164043716077
+      ],
+      "ci_str": "91/100 (91.0%) [83.6%, 95.8%]",
+      "mean_speed_ms": 23.751982429654458,
+      "std_speed_ms": 2.387773481775957,
+      "mean_speed_kmh": 85.50713674675605,
+      "mean_return": 7.036125460240043,
+      "std_return": 6.2006089829756785,
+      "mean_lane_changes": 4.52,
+      "std_lane_changes": 3.1952464693666434,
+      "mean_rel_speed_ms": 5.048001862650893,
+      "std_rel_speed_ms": 2.430266716320725,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 214,
+          "share": 0.22717622080679406
+        },
+        "IDLE": {
+          "count": 198,
+          "share": 0.21019108280254778
+        },
+        "LANE_RIGHT": {
+          "count": 238,
+          "share": 0.2526539278131635
+        },
+        "FASTER": {
+          "count": 51,
+          "share": 0.054140127388535034
+        },
+        "SLOWER": {
+          "count": 241,
+          "share": 0.25583864118895966
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 0.25583864118895966,
+      "is_constant": false,
+      "rung": "R2",
+      "baseline_name": "IDM_MOBIL"
+    }
+  },
+  "R3": {
+    "random": {
+      "n_episodes": 100,
+      "crashes": 95,
+      "crash_rate": 0.95,
+      "ci_95": [
+        0.8871650888945373,
+        0.9835681208179479
+      ],
+      "ci_str": "95/100 (95.0%) [88.7%, 98.4%]",
+      "mean_speed_ms": 23.32946327139986,
+      "std_speed_ms": 2.513464053453917,
+      "mean_speed_kmh": 83.9860677770395,
+      "mean_return": 6.318868849646523,
+      "std_return": 6.127424234703026,
+      "mean_lane_changes": 2.72,
+      "std_lane_changes": 2.7389048906451645,
+      "mean_rel_speed_ms": 3.6221245588231126,
+      "std_rel_speed_ms": 2.592238042265896,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 171,
+          "share": 0.19365798414496035
+        },
+        "IDLE": {
+          "count": 173,
+          "share": 0.19592298980747452
+        },
+        "LANE_RIGHT": {
+          "count": 196,
+          "share": 0.22197055492638731
+        },
+        "FASTER": {
+          "count": 168,
+          "share": 0.19026047565118911
+        },
+        "SLOWER": {
+          "count": 175,
+          "share": 0.19818799546998866
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 0.22197055492638731,
+      "is_constant": false,
+      "rung": "R3",
+      "baseline_name": "random"
+    },
+    "always_IDLE": {
+      "n_episodes": 100,
+      "crashes": 92,
+      "crash_rate": 0.92,
+      "ci_95": [
+        0.848442364135579,
+        0.9648284374818372
+      ],
+      "ci_str": "92/100 (92.0%) [84.8%, 96.5%]",
+      "mean_speed_ms": 24.048024392762603,
+      "std_speed_ms": 1.1802651082129527,
+      "mean_speed_kmh": 86.57288781394537,
+      "mean_return": 9.223333333333334,
+      "std_return": 7.04938724243655,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 4.107983856188274,
+      "std_rel_speed_ms": 1.117872078805255,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 1198,
+          "share": 1.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R3",
+      "baseline_name": "always_IDLE"
+    },
+    "always_SLOWER": {
+      "n_episodes": 100,
+      "crashes": 12,
+      "crash_rate": 0.12,
+      "ci_95": [
+        0.06356890256115931,
+        0.20023568361996882
+      ],
+      "ci_str": "12/100 (12.0%) [6.4%, 20.0%]",
+      "mean_speed_ms": 19.931669645938495,
+      "std_speed_ms": 0.3378136396213024,
+      "mean_speed_kmh": 71.75401072537858,
+      "mean_return": 19.241772695126233,
+      "std_return": 4.934793435278366,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": -0.6332025901157404,
+      "std_rel_speed_ms": 0.4162387170340975,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 2763,
+          "share": 1.0
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R3",
+      "baseline_name": "always_SLOWER"
+    },
+    "always_FASTER": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 27.20933193034935,
+      "std_speed_ms": 2.390936825144652,
+      "mean_speed_kmh": 97.95359494925766,
+      "mean_return": 5.383297339349928,
+      "std_return": 4.373141724774065,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 7.562032739581324,
+      "std_rel_speed_ms": 2.2767907145779263,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 653,
+          "share": 1.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R3",
+      "baseline_name": "always_FASTER"
+    },
+    "always_LANE_RIGHT": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 23.295650914254903,
+      "std_speed_ms": 1.521223115768417,
+      "mean_speed_kmh": 83.86434329131765,
+      "mean_return": 6.445154143730265,
+      "std_return": 5.689598354050144,
+      "mean_lane_changes": 1.48,
+      "std_lane_changes": 1.0628264204469138,
+      "mean_rel_speed_ms": 3.5709368837012887,
+      "std_rel_speed_ms": 1.409051627906846,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 835,
+          "share": 1.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R3",
+      "baseline_name": "always_LANE_RIGHT"
+    },
+    "IDM_MOBIL": {
+      "n_episodes": 100,
+      "crashes": 68,
+      "crash_rate": 0.68,
+      "ci_95": [
+        0.5792331383683775,
+        0.769780083238423
+      ],
+      "ci_str": "68/100 (68.0%) [57.9%, 77.0%]",
+      "mean_speed_ms": 25.010849360928123,
+      "std_speed_ms": 2.7324266319559896,
+      "mean_speed_kmh": 90.03905769934124,
+      "mean_return": 13.09845898263267,
+      "std_return": 9.8078920220123,
+      "mean_lane_changes": 8.72,
+      "std_lane_changes": 6.146673897320404,
+      "mean_rel_speed_ms": 5.008788246073695,
+      "std_rel_speed_ms": 2.59832929024553,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 412,
+          "share": 0.26309067688378035
+        },
+        "IDLE": {
+          "count": 372,
+          "share": 0.23754789272030652
+        },
+        "LANE_RIGHT": {
+          "count": 460,
+          "share": 0.2937420178799489
+        },
+        "FASTER": {
+          "count": 72,
+          "share": 0.04597701149425287
+        },
+        "SLOWER": {
+          "count": 250,
+          "share": 0.15964240102171137
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 0.2937420178799489,
+      "is_constant": false,
+      "rung": "R3",
+      "baseline_name": "IDM_MOBIL"
+    }
+  },
+  "R4": {
+    "random": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 23.39117684038877,
+      "std_speed_ms": 2.2453502543167128,
+      "mean_speed_kmh": 84.20823662539958,
+      "mean_return": 5.956370345963349,
+      "std_return": 6.675232221611095,
+      "mean_lane_changes": 2.27,
+      "std_lane_changes": 1.8431223507949765,
+      "mean_rel_speed_ms": 3.7424987760563937,
+      "std_rel_speed_ms": 2.2855334546254356,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 143,
+          "share": 0.17333333333333334
+        },
+        "IDLE": {
+          "count": 190,
+          "share": 0.23030303030303031
+        },
+        "LANE_RIGHT": {
+          "count": 166,
+          "share": 0.2012121212121212
+        },
+        "FASTER": {
+          "count": 165,
+          "share": 0.2
+        },
+        "SLOWER": {
+          "count": 161,
+          "share": 0.19515151515151516
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 0.23030303030303031,
+      "is_constant": false,
+      "rung": "R4",
+      "baseline_name": "random"
+    },
+    "always_IDLE": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 24.034290569855447,
+      "std_speed_ms": 1.170532803372432,
+      "mean_speed_kmh": 86.52344605147961,
+      "mean_return": 11.038,
+      "std_return": 12.951680493470265,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 4.060682397354807,
+      "std_rel_speed_ms": 1.1143643545324786,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 1426,
+          "share": 1.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R4",
+      "baseline_name": "always_IDLE"
+    },
+    "always_SLOWER": {
+      "n_episodes": 100,
+      "crashes": 12,
+      "crash_rate": 0.12,
+      "ci_95": [
+        0.06356890256115931,
+        0.20023568361996882
+      ],
+      "ci_str": "12/100 (12.0%) [6.4%, 20.0%]",
+      "mean_speed_ms": 19.916099345780516,
+      "std_speed_ms": 0.3335208267946883,
+      "mean_speed_kmh": 71.69795764480986,
+      "mean_return": 62.26843936179285,
+      "std_return": 20.750577696204346,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": -1.257235350529985,
+      "std_rel_speed_ms": 0.4557353753480623,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 8923,
+          "share": 1.0
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R4",
+      "baseline_name": "always_SLOWER"
+    },
+    "always_FASTER": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 27.20933193034935,
+      "std_speed_ms": 2.390936825144652,
+      "mean_speed_kmh": 97.95359494925766,
+      "mean_return": 5.383297339349928,
+      "std_return": 4.373141724774065,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 7.562032739581324,
+      "std_rel_speed_ms": 2.2767907145779263,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 653,
+          "share": 1.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R4",
+      "baseline_name": "always_FASTER"
+    },
+    "always_LANE_RIGHT": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 23.292923641527626,
+      "std_speed_ms": 1.518406955340341,
+      "mean_speed_kmh": 83.85452510949945,
+      "mean_return": 6.463154143730264,
+      "std_return": 5.753845104002599,
+      "mean_lane_changes": 1.48,
+      "std_lane_changes": 1.0628264204469138,
+      "mean_rel_speed_ms": 3.5674855660136022,
+      "std_rel_speed_ms": 1.4068968172355505,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 838,
+          "share": 1.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R4",
+      "baseline_name": "always_LANE_RIGHT"
+    },
+    "IDM_MOBIL": {
+      "n_episodes": 100,
+      "crashes": 72,
+      "crash_rate": 0.72,
+      "ci_95": [
+        0.6213329952827327,
+        0.8052063725088184
+      ],
+      "ci_str": "72/100 (72.0%) [62.1%, 80.5%]",
+      "mean_speed_ms": 25.29745489964678,
+      "std_speed_ms": 2.79627915437136,
+      "mean_speed_kmh": 91.0708376387284,
+      "mean_return": 31.690905517606797,
+      "std_return": 37.43866545382362,
+      "mean_lane_changes": 12.93,
+      "std_lane_changes": 13.149338386398004,
+      "mean_rel_speed_ms": 5.096800648402168,
+      "std_rel_speed_ms": 2.532676418399041,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 621,
+          "share": 0.1714049130554789
+        },
+        "IDLE": {
+          "count": 1846,
+          "share": 0.5095224951697488
+        },
+        "LANE_RIGHT": {
+          "count": 672,
+          "share": 0.18548164504554238
+        },
+        "FASTER": {
+          "count": 126,
+          "share": 0.03477780844603919
+        },
+        "SLOWER": {
+          "count": 358,
+          "share": 0.09881313828319073
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 0.5095224951697488,
+      "is_constant": false,
+      "rung": "R4",
+      "baseline_name": "IDM_MOBIL"
+    }
+  },
+  "R5": {
+    "random": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 25.232052611077187,
+      "std_speed_ms": 2.296613546889881,
+      "mean_speed_kmh": 90.83538939987787,
+      "mean_return": 19.220643142506653,
+      "std_return": 10.021342789098664,
+      "mean_lane_changes": 3.95,
+      "std_lane_changes": 2.688401011754013,
+      "mean_rel_speed_ms": 5.370591463944867,
+      "std_rel_speed_ms": 2.3128410374032353,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 495,
+          "share": 0.20320197044334976
+        },
+        "IDLE": {
+          "count": 498,
+          "share": 0.2044334975369458
+        },
+        "LANE_RIGHT": {
+          "count": 489,
+          "share": 0.20073891625615764
+        },
+        "FASTER": {
+          "count": 476,
+          "share": 0.19540229885057472
+        },
+        "SLOWER": {
+          "count": 478,
+          "share": 0.1962233169129721
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 0.2044334975369458,
+      "is_constant": false,
+      "rung": "R5",
+      "baseline_name": "random"
+    },
+    "always_IDLE": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 25.0,
+      "std_speed_ms": 0.0,
+      "mean_speed_kmh": 90.0,
+      "mean_return": 56.789333333333325,
+      "std_return": 64.60243885470038,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 4.844329786939613,
+      "std_rel_speed_ms": 0.5845150567268715,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 6948,
+          "share": 1.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R5",
+      "baseline_name": "always_IDLE"
+    },
+    "always_SLOWER": {
+      "n_episodes": 100,
+      "crashes": 12,
+      "crash_rate": 0.12,
+      "ci_95": [
+        0.06356890256115931,
+        0.20023568361996882
+      ],
+      "ci_str": "12/100 (12.0%) [6.4%, 20.0%]",
+      "mean_speed_ms": 20.052945967278472,
+      "std_speed_ms": 0.1114660684263068,
+      "mean_speed_kmh": 72.1906054822025,
+      "mean_return": 311.65776206960146,
+      "std_return": 103.35386215171476,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": -1.142232182121323,
+      "std_rel_speed_ms": 0.6600624872743063,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 44591,
+          "share": 1.0
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R5",
+      "baseline_name": "always_SLOWER"
+    },
+    "always_FASTER": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 29.437197572971193,
+      "std_speed_ms": 0.41285258121824975,
+      "mean_speed_kmh": 105.9739112626963,
+      "mean_return": 28.384968608400772,
+      "std_return": 21.922548104937654,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 9.382501767170153,
+      "std_rel_speed_ms": 0.8331878329696817,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 3050,
+          "share": 1.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R5",
+      "baseline_name": "always_FASTER"
+    },
+    "always_LANE_RIGHT": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 25.0,
+      "std_speed_ms": 0.0,
+      "mean_speed_kmh": 90.0,
+      "mean_return": 40.29425740311441,
+      "std_return": 42.65062384927185,
+      "mean_lane_changes": 1.53,
+      "std_lane_changes": 1.1086478250553689,
+      "mean_rel_speed_ms": 4.957471278092373,
+      "std_rel_speed_ms": 0.602656596424292,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 4745,
+          "share": 1.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R5",
+      "baseline_name": "always_LANE_RIGHT"
+    },
+    "IDM_MOBIL": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 25.57521414914465,
+      "std_speed_ms": 1.8059913087910449,
+      "mean_speed_kmh": 92.07077093692074,
+      "mean_return": 40.39677365029404,
+      "std_return": 65.95902908389701,
+      "mean_lane_changes": 10.4,
+      "std_lane_changes": 10.583005244258361,
+      "mean_rel_speed_ms": 5.62595925717166,
+      "std_rel_speed_ms": 1.9547167052728962,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 1192,
+          "share": 0.2459253146276047
+        },
+        "IDLE": {
+          "count": 1189,
+          "share": 0.24530637507736744
+        },
+        "LANE_RIGHT": {
+          "count": 1589,
+          "share": 0.3278316484423355
+        },
+        "FASTER": {
+          "count": 181,
+          "share": 0.03734268619764803
+        },
+        "SLOWER": {
+          "count": 696,
+          "share": 0.14359397565504436
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 0.3278316484423355,
+      "is_constant": false,
+      "rung": "R5",
+      "baseline_name": "IDM_MOBIL"
+    }
+  },
+  "R6": {
+    "random": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 24.940403191740526,
+      "std_speed_ms": 2.111835389742359,
+      "mean_speed_kmh": 89.7854514902659,
+      "mean_return": -43.28038008154799,
+      "std_return": 4.813531218663828,
+      "mean_lane_changes": 3.92,
+      "std_lane_changes": 3.10702429987279,
+      "mean_rel_speed_ms": 4.9985495852221735,
+      "std_rel_speed_ms": 2.1668736460343476,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 488,
+          "share": 0.19273301737756715
+        },
+        "IDLE": {
+          "count": 521,
+          "share": 0.20576619273301738
+        },
+        "LANE_RIGHT": {
+          "count": 464,
+          "share": 0.18325434439178515
+        },
+        "FASTER": {
+          "count": 489,
+          "share": 0.19312796208530805
+        },
+        "SLOWER": {
+          "count": 570,
+          "share": 0.22511848341232227
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 0.22511848341232227,
+      "is_constant": false,
+      "rung": "R6",
+      "baseline_name": "random"
+    },
+    "always_IDLE": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 25.0,
+      "std_speed_ms": 0.0,
+      "mean_speed_kmh": 90.0,
+      "mean_return": -26.489169674578907,
+      "std_return": 32.435638263826355,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 4.844329786939613,
+      "std_rel_speed_ms": 0.5845150567268715,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 6948,
+          "share": 1.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R6",
+      "baseline_name": "always_IDLE"
+    },
+    "always_SLOWER": {
+      "n_episodes": 100,
+      "crashes": 12,
+      "crash_rate": 0.12,
+      "ci_95": [
+        0.06356890256115931,
+        0.20023568361996882
+      ],
+      "ci_str": "12/100 (12.0%) [6.4%, 20.0%]",
+      "mean_speed_ms": 20.052945967278472,
+      "std_speed_ms": 0.1114660684263068,
+      "mean_speed_kmh": 72.1906054822025,
+      "mean_return": 44.38895385150769,
+      "std_return": 39.26712628284766,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": -1.142232182121323,
+      "std_rel_speed_ms": 0.6600624872743063,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 44591,
+          "share": 1.0
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R6",
+      "baseline_name": "always_SLOWER"
+    },
+    "always_FASTER": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 29.437197572971193,
+      "std_speed_ms": 0.41285258121824975,
+      "mean_speed_kmh": 105.9739112626963,
+      "mean_return": -32.56236987430042,
+      "std_return": 14.97234250459941,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 9.382501767170153,
+      "std_rel_speed_ms": 0.8331878329696817,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 3050,
+          "share": 1.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R6",
+      "baseline_name": "always_FASTER"
+    },
+    "always_LANE_RIGHT": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 25.0,
+      "std_speed_ms": 0.0,
+      "mean_speed_kmh": 90.0,
+      "mean_return": -35.07099820773616,
+      "std_return": 17.9786170780752,
+      "mean_lane_changes": 1.53,
+      "std_lane_changes": 1.1086478250553689,
+      "mean_rel_speed_ms": 4.957471278092373,
+      "std_rel_speed_ms": 0.602656596424292,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 4745,
+          "share": 1.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R6",
+      "baseline_name": "always_LANE_RIGHT"
+    },
+    "IDM_MOBIL": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 25.57521414914465,
+      "std_speed_ms": 1.8059913087910449,
+      "mean_speed_kmh": 92.07077093692074,
+      "mean_return": -33.06163222219759,
+      "std_return": 39.26907591231613,
+      "mean_lane_changes": 10.4,
+      "std_lane_changes": 10.583005244258361,
+      "mean_rel_speed_ms": 5.62595925717166,
+      "std_rel_speed_ms": 1.9547167052728962,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 1192,
+          "share": 0.2459253146276047
+        },
+        "IDLE": {
+          "count": 1189,
+          "share": 0.24530637507736744
+        },
+        "LANE_RIGHT": {
+          "count": 1589,
+          "share": 0.3278316484423355
+        },
+        "FASTER": {
+          "count": 181,
+          "share": 0.03734268619764803
+        },
+        "SLOWER": {
+          "count": 696,
+          "share": 0.14359397565504436
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 0.3278316484423355,
+      "is_constant": false,
+      "rung": "R6",
+      "baseline_name": "IDM_MOBIL"
+    }
+  },
+  "R7_GT": {
+    "random": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 25.057113952451058,
+      "std_speed_ms": 2.363162274131284,
+      "mean_speed_kmh": 90.20561022882382,
+      "mean_return": -45.843591595191775,
+      "std_return": 4.844637271320044,
+      "mean_lane_changes": 3.91,
+      "std_lane_changes": 2.936307204636463,
+      "mean_rel_speed_ms": 5.1860160231279835,
+      "std_rel_speed_ms": 2.4015493313839835,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 508,
+          "share": 0.20983064849235852
+        },
+        "IDLE": {
+          "count": 509,
+          "share": 0.21024370095002065
+        },
+        "LANE_RIGHT": {
+          "count": 467,
+          "share": 0.1928954977282115
+        },
+        "FASTER": {
+          "count": 469,
+          "share": 0.19372160264353572
+        },
+        "SLOWER": {
+          "count": 468,
+          "share": 0.19330855018587362
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 0.21024370095002065,
+      "is_constant": false,
+      "rung": "R7_GT",
+      "baseline_name": "random"
+    },
+    "always_IDLE": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 25.0,
+      "std_speed_ms": 0.0,
+      "mean_speed_kmh": 90.0,
+      "mean_return": -36.59452201187717,
+      "std_return": 30.258693848988848,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 4.844329786939613,
+      "std_rel_speed_ms": 0.5845150567268715,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 6948,
+          "share": 1.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "IDLE",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R7_GT",
+      "baseline_name": "always_IDLE"
+    },
+    "always_SLOWER": {
+      "n_episodes": 100,
+      "crashes": 12,
+      "crash_rate": 0.12,
+      "ci_95": [
+        0.06356890256115931,
+        0.20023568361996882
+      ],
+      "ci_str": "12/100 (12.0%) [6.4%, 20.0%]",
+      "mean_speed_ms": 20.052945967278472,
+      "std_speed_ms": 0.1114660684263068,
+      "mean_speed_kmh": 72.1906054822025,
+      "mean_return": 25.421553020523916,
+      "std_return": 59.81927043763004,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": -1.142232182121323,
+      "std_rel_speed_ms": 0.6600624872743063,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 44591,
+          "share": 1.0
+        }
+      },
+      "dominant_action": "SLOWER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R7_GT",
+      "baseline_name": "always_SLOWER"
+    },
+    "always_FASTER": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 29.437197572971193,
+      "std_speed_ms": 0.41285258121824975,
+      "mean_speed_kmh": 105.9739112626963,
+      "mean_return": -35.79055841346713,
+      "std_return": 13.69127241044422,
+      "mean_lane_changes": 0.0,
+      "std_lane_changes": 0.0,
+      "mean_rel_speed_ms": 9.382501767170153,
+      "std_rel_speed_ms": 0.8331878329696817,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "FASTER": {
+          "count": 3050,
+          "share": 1.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "FASTER",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R7_GT",
+      "baseline_name": "always_FASTER"
+    },
+    "always_LANE_RIGHT": {
+      "n_episodes": 100,
+      "crashes": 100,
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+      "mean_speed_ms": 25.0,
+      "std_speed_ms": 0.0,
+      "mean_speed_kmh": 90.0,
+      "mean_return": -43.475800273803955,
+      "std_return": 12.242312547094974,
+      "mean_lane_changes": 1.53,
+      "std_lane_changes": 1.1086478250553689,
+      "mean_rel_speed_ms": 4.957471278092373,
+      "std_rel_speed_ms": 0.602656596424292,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 0,
+          "share": 0.0
+        },
+        "IDLE": {
+          "count": 0,
+          "share": 0.0
+        },
+        "LANE_RIGHT": {
+          "count": 4745,
+          "share": 1.0
+        },
+        "FASTER": {
+          "count": 0,
+          "share": 0.0
+        },
+        "SLOWER": {
+          "count": 0,
+          "share": 0.0
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 1.0,
+      "is_constant": true,
+      "rung": "R7_GT",
+      "baseline_name": "always_LANE_RIGHT"
+    },
+    "IDM_MOBIL": {
+      "n_episodes": 100,
+      "crashes": 99,
+      "crash_rate": 0.99,
+      "ci_95": [
+        0.9455406146079194,
+        0.9997468539670226
+      ],
+      "ci_str": "99/100 (99.0%) [94.6%, 100.0%]",
+      "mean_speed_ms": 25.57521414914465,
+      "std_speed_ms": 1.8059913087910449,
+      "mean_speed_kmh": 92.07077093692074,
+      "mean_return": -39.6000084049128,
+      "std_return": 37.455819800710906,
+      "mean_lane_changes": 10.4,
+      "std_lane_changes": 10.583005244258361,
+      "mean_rel_speed_ms": 5.62595925717166,
+      "std_rel_speed_ms": 1.9547167052728962,
+      "action_histogram": {
+        "LANE_LEFT": {
+          "count": 1192,
+          "share": 0.2459253146276047
+        },
+        "IDLE": {
+          "count": 1189,
+          "share": 0.24530637507736744
+        },
+        "LANE_RIGHT": {
+          "count": 1589,
+          "share": 0.3278316484423355
+        },
+        "FASTER": {
+          "count": 181,
+          "share": 0.03734268619764803
+        },
+        "SLOWER": {
+          "count": 696,
+          "share": 0.14359397565504436
+        }
+      },
+      "dominant_action": "LANE_RIGHT",
+      "dominant_action_frac": 0.3278316484423355,
+      "is_constant": false,
+      "rung": "R7_GT",
+      "baseline_name": "IDM_MOBIL"
+    }
+  }
+}

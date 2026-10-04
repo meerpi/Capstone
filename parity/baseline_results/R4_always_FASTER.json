@@ -1,0 +1,46 @@
+{
+  "n_episodes": 100,
+  "crashes": 100,
+  "crash_rate": 1.0,
+  "ci_95": [
+    0.9637833073548235,
+    1.0
+  ],
+  "ci_str": "100/100 (100.0%) [96.4%, 100.0%]",
+  "mean_speed_ms": 27.20933193034935,
+  "std_speed_ms": 2.390936825144652,
+  "mean_speed_kmh": 97.95359494925766,
+  "mean_return": 5.383297339349928,
+  "std_return": 4.373141724774065,
+  "mean_lane_changes": 0.0,
+  "std_lane_changes": 0.0,
+  "mean_rel_speed_ms": 7.562032739581324,
+  "std_rel_speed_ms": 2.2767907145779263,
+  "action_histogram": {
+    "LANE_LEFT": {
+      "count": 0,
+      "share": 0.0
+    },
+    "IDLE": {
+      "count": 0,
+      "share": 0.0
+    },
+    "LANE_RIGHT": {
+      "count": 0,
+      "share": 0.0
+    },
+    "FASTER": {
+      "count": 653,
+      "share": 1.0
+    },
+    "SLOWER": {
+      "count": 0,
+      "share": 0.0
+    }
+  },
+  "dominant_action": "FASTER",
+  "dominant_action_frac": 1.0,
+  "is_constant": true,
+  "rung": "R4",
+  "baseline_name": "always_FASTER"
+}

@@ -44,26 +44,50 @@ import env_config
 def is_better_candidate(
     candidate: dict[str, Any],
     best: dict[str, Any] | None,
+    reversal_threshold: float = 2.0,
 ) -> bool:
-    """Compare evaluation candidates lexicographically (safety-first).
+    """Compare evaluation candidates lexicographically (safety & behavioral sanity first).
 
-    Lexicographic sort key: (crashes == 0, -crashes, mean_speed_kmh).
+    Lexicographic sort key:
+        (crashes == 0, chatter_ok, -crashes, -reversal_rate, mean_speed_kmh)
+
+    Criteria:
     - Zero-crash checkpoints strictly beat any checkpoint with >= 1 crash.
-    - Among equal or non-zero crash counts, fewer crashes wins.
-    - Among equal crash counts, higher mean speed wins.
+    - Among candidates in the same crash tier, acceptable chatter (reversal_rate <= threshold)
+      strictly beats chattering policies (reversal_rate > threshold).
+    - If candidate exceeds the reversal threshold while current best satisfies it,
+      the candidate is rejected / deprioritized.
+    - Among equal crash and chatter tiers, fewer crashes and lower reversal rate win.
+    - Higher mean speed acts as the final tiebreaker.
     """
     if best is None:
         return True
 
-    def _extract_key(d: dict[str, Any]) -> tuple[bool, float, float]:
+    def _extract_reversal(d: dict[str, Any]) -> float:
+        for k in (
+            "action_reversal_rate",
+            "reversal_rate",
+            "rapid_reversals_per_ep",
+            "mean_reversals",
+            "mean_rapid_reversals",
+            "chatter_rate",
+        ):
+            if k in d:
+                return float(d[k])
+        return 0.0
+
+    def _extract_key(d: dict[str, Any]) -> tuple[bool, bool, float, float, float]:
         if "crashes" in d:
             crashes = float(d["crashes"])
         elif "crash_rate" in d:
             crashes = float(d["crash_rate"])
         else:
             crashes = 0.0
+
+        rev_rate = _extract_reversal(d)
+        chatter_rank = 1.0 if rev_rate <= reversal_threshold else -rev_rate
         speed = float(d.get("mean_speed_kmh", 0.0))
-        return (crashes == 0.0, -crashes, speed)
+        return (crashes == 0.0, chatter_rank, -crashes, speed)
 
     return _extract_key(candidate) > _extract_key(best)
 
@@ -142,6 +166,7 @@ def make_env_thunk(
     collision_penalty: float = -50.0,
     overtake_bonus: float = 1.0,
     constrained_mode: bool = False,
+    target_speeds: list[float] | None = None,
 ) -> Callable[[], gym.Env]:
     """Create a thunk for parallel environment instantiation."""
 
@@ -155,6 +180,7 @@ def make_env_thunk(
             collision_penalty=collision_penalty,
             overtake_bonus=overtake_bonus,
             constrained_mode=constrained_mode,
+            target_speeds=target_speeds,
         )
         env = gym.wrappers.RecordEpisodeStatistics(env)
         return env
@@ -283,6 +309,9 @@ def train(args: argparse.Namespace) -> str:
     overtake_bonus = getattr(args, "overtake_bonus", 1.0)
     constrained_mode = getattr(args, "lagrangian", False)
 
+    # Parse target_speeds from CLI
+    target_speeds = [float(x) for x in args.target_speeds] if getattr(args, 'target_speeds', None) else None
+
     # Create parallel environments
     env_fns = [
         make_env_thunk(
@@ -294,6 +323,7 @@ def train(args: argparse.Namespace) -> str:
             collision_penalty=collision_penalty,
             overtake_bonus=overtake_bonus,
             constrained_mode=constrained_mode,
+            target_speeds=target_speeds,
         )
         for i in range(args.num_envs)
     ]
@@ -851,16 +881,21 @@ def train(args: argparse.Namespace) -> str:
                 lanes_count=args.lanes,
                 vehicles_density=args.density,
                 vehicles_count=args.vehicles,
-                episodes=10,
+                episodes=getattr(args, "val_episodes", 10),
                 seed_start=3000,
                 frame_stack_k=args.frame_stack,
                 device=str(device),
                 collision_penalty=collision_penalty,
                 overtake_bonus=overtake_bonus,
                 constrained_mode=constrained_mode,
+                target_speeds=target_speeds,
             )
 
-            if is_better_candidate(val_results, best_candidate):
+            if is_better_candidate(
+                val_results,
+                best_candidate,
+                reversal_threshold=getattr(args, "reversal_threshold", 2.0),
+            ):
                 best_candidate = val_results.copy()
                 best_dir = getattr(args, "checkpoint_dir", None) or ("scratch/checkpoints" if getattr(args, "total_timesteps", 600000) < 100000 or getattr(args, "dry_run", False) else "models")
                 os.makedirs(best_dir, exist_ok=True)
@@ -876,6 +911,7 @@ def train(args: argparse.Namespace) -> str:
                     f"  ★ New best model saved: crashes={best_candidate['crashes']} "
                     f"({best_candidate['crash_rate']:.1f}%), "
                     f"speed={best_candidate['mean_speed_kmh']:.1f} km/h, "
+                    f"rev_rate={best_candidate.get('action_reversal_rate', 0.0):.1f}, "
                     f"overtakes={best_candidate['mean_overtakes']:.1f}",
                     flush=True,
                 )
@@ -884,6 +920,7 @@ def train(args: argparse.Namespace) -> str:
             writer.add_scalar("eval/crashes", val_results["crashes"], global_step)
             writer.add_scalar("eval/mean_speed_kmh", val_results["mean_speed_kmh"], global_step)
             writer.add_scalar("eval/mean_lane_changes", val_results["mean_lane_changes"], global_step)
+            writer.add_scalar("eval/action_reversal_rate", val_results.get("action_reversal_rate", 0.0), global_step)
             writer.add_scalar("eval/mean_overtakes", val_results["mean_overtakes"], global_step)
 
     envs.close()
@@ -944,6 +981,7 @@ def evaluate(
     collision_penalty: float = -50.0,
     overtake_bonus: float = 1.0,
     constrained_mode: bool = False,
+    target_speeds: list[float] | None = None,
 ) -> dict[str, Any]:
     """Evaluate trained optimal overtaking agent."""
     checkpoint = torch.load(model_path, map_location=device, weights_only=False)
@@ -979,6 +1017,7 @@ def evaluate(
         collision_penalty=collision_penalty,
         overtake_bonus=overtake_bonus,
         constrained_mode=constrained_mode,
+        target_speeds=target_speeds,
     )
 
     obs_dim = int(np.prod(env.observation_space.shape))
@@ -997,6 +1036,7 @@ def evaluate(
     durations: list[int] = []
     speeds_mps: list[float] = []
     total_lane_changes: list[int] = []
+    total_rapid_reversals: list[int] = []
     total_overtakes: list[int] = []
 
     for ep in range(episodes):
@@ -1005,6 +1045,8 @@ def evaluate(
         ep_steps = 0
         ep_speeds: list[float] = []
         ep_lane_changes = 0
+        ep_rapid_reversals = 0
+        ep_lc_events: list[tuple[int, int, int]] = []  # (step, from_lane, to_lane)
         ep_overtakes = 0
         crashed = False
         current_lane = (
@@ -1029,11 +1071,16 @@ def evaluate(
             obs, reward, terminated, truncated, info = env.step(action_idx)
             ep_steps += 1
 
-            # Track lane changes
+            # Track lane changes and rapid reversals (within <= 5 steps)
             if hasattr(env.unwrapped, "vehicle"):
                 new_lane = env.unwrapped.vehicle.lane_index[2]
                 if current_lane is not None and new_lane != current_lane:
                     ep_lane_changes += 1
+                    if ep_lc_events:
+                        prev_step, prev_from, _ = ep_lc_events[-1]
+                        if new_lane == prev_from and (ep_steps - prev_step) <= 5:
+                            ep_rapid_reversals += 1
+                    ep_lc_events.append((ep_steps, current_lane, new_lane))
                 current_lane = new_lane
 
             ep_speeds.append(float(info.get("speed", 0.0)))
@@ -1050,6 +1097,7 @@ def evaluate(
         durations.append(ep_steps)
         speeds_mps.append(float(np.mean(ep_speeds)) if ep_speeds else 0.0)
         total_lane_changes.append(ep_lane_changes)
+        total_rapid_reversals.append(ep_rapid_reversals)
         total_overtakes.append(ep_overtakes)
 
     env.close()
@@ -1058,6 +1106,7 @@ def evaluate(
     crash_rate = (crashes / episodes) * 100.0
     mean_duration = float(np.mean(durations))
     mean_lc = float(np.mean(total_lane_changes))
+    mean_rev = float(np.mean(total_rapid_reversals)) if total_rapid_reversals else 0.0
     mean_ot = float(np.mean(total_overtakes))
 
     results = {
@@ -1069,6 +1118,10 @@ def evaluate(
         "mean_duration": mean_duration,
         "mean_speed_kmh": mean_speed_kmh,
         "mean_lane_changes": mean_lc,
+        "action_reversal_rate": mean_rev,
+        "reversal_rate": mean_rev,
+        "mean_reversals": mean_rev,
+        "rapid_reversals_per_ep": mean_rev,
         "mean_overtakes": mean_ot,
     }
 
@@ -1076,7 +1129,7 @@ def evaluate(
         f"  [EVAL {lanes_count}L] crashes={crashes}/{episodes} ({crash_rate:5.1f}%) "
         f"speed={mean_speed_kmh:5.1f} km/h "
         f"duration={mean_duration:5.1f} "
-        f"LC={mean_lc:.1f} OT={mean_ot:.1f}",
+        f"LC={mean_lc:.1f} Rev={mean_rev:.1f} OT={mean_ot:.1f}",
         flush=True,
     )
     return results
@@ -1198,17 +1251,40 @@ def parse_args() -> argparse.Namespace:
         help="Explicit output path for model checkpoint.",
     )
 
-    # Evaluation
+    # Evaluation & Validation
     parser.add_argument("--eval-only", action="store_true", default=False)
     parser.add_argument("--model-path", type=str, default=None)
     parser.add_argument("--eval-episodes", type=int, default=30)
     parser.add_argument("--eval-seed-start", type=int, default=2000)
+    parser.add_argument(
+        "--val-episodes",
+        type=int,
+        default=50,
+        help="Number of episodes for periodic validation checkpoint selection (default: 50, Clopper-Pearson 95%% CI upper bound 7.1%%).",
+    )
+    parser.add_argument(
+        "--reversal-threshold",
+        type=float,
+        default=2.0,
+        help="Maximum allowable rapid lane-boundary reversals per episode within 5 steps (default: 2.0).",
+    )
+
+    # Target speeds for DiscreteMetaAction
+    parser.add_argument(
+        "--target-speeds",
+        type=float,
+        nargs="+",
+        default=None,
+        help="Target speeds for DiscreteMetaAction (e.g. 10 15 20 25 30). Default: [20, 25, 30].",
+    )
 
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+
+    target_speeds = [float(x) for x in args.target_speeds] if args.target_speeds else None
 
     if args.eval_only:
         if args.model_path is None:
@@ -1225,6 +1301,7 @@ def main() -> None:
             device=device,
             collision_penalty=getattr(args, "collision_penalty", -50.0),
             overtake_bonus=getattr(args, "overtake_bonus", 1.0),
+            target_speeds=target_speeds,
         )
     else:
         # Train and evaluate on specified lane config
@@ -1250,6 +1327,7 @@ def main() -> None:
             device=device,
             collision_penalty=getattr(args, "collision_penalty", -50.0),
             overtake_bonus=getattr(args, "overtake_bonus", 1.0),
+            target_speeds=target_speeds,
         )
 
 

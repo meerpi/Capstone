@@ -1,0 +1,112 @@
+{
+  "model_path": "scratch/optimal_overtaker_extended_speeds/final.pt",
+  "n_episodes": 100,
+  "seed_start": 2000,
+  "seed_end": 2099,
+  "total_crashes": 1,
+  "crash_rate_pct": 1.0,
+  "mean_speed_ms": 20.334331385850405,
+  "mean_speed_kmh": 73.20359298906146,
+  "mean_lane_changes": 14.53,
+  "mean_return": 169.49728638812397,
+  "category_breakdown": {
+    "(b) Lane-change collision": {
+      "count": 1,
+      "percentage": 100.0
+    }
+  },
+  "crashes": [
+    {
+      "seed": 2025,
+      "impact_step": 349,
+      "category": "(b) Lane-change collision",
+      "explanation": "Crash occurred during/after lane change. Actions in last 5 steps: ['IDLE', 'LANE_LEFT', 'LANE_LEFT', 'FASTER', 'FASTER']. Ego lane: 1, speed: 11.72 m/s.",
+      "final_ego_speed_ms": 11.721508526877935,
+      "final_ego_lane": 1,
+      "collided_vehicle": {
+        "rel_x": -3.558368868333446,
+        "rel_y": -4.747979382690369,
+        "speed_ms": 20.22119622509163,
+        "speed_kmh": 72.79630641032988,
+        "lane": 0
+      },
+      "pre_impact_5_steps": [
+        {
+          "step": 344,
+          "ego_speed_ms": 10.277636917319546,
+          "ego_speed_kmh": 36.99949290235037,
+          "ego_lane": 2,
+          "action": "IDLE",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": -13.69177402840296,
+            "rel_y": -9.78829253631359,
+            "speed_ms": 20.21656447589192,
+            "speed_kmh": 72.77963211321092,
+            "lane": 0
+          }
+        },
+        {
+          "step": 345,
+          "ego_speed_ms": 10.185091278213031,
+          "ego_speed_kmh": 36.66632860156691,
+          "ego_lane": 2,
+          "action": "LANE_LEFT",
+          "lane_change_in_progress": "False",
+          "collided_vehicle": {
+            "rel_x": -11.632793631954883,
+            "rel_y": -9.25199284523348,
+            "speed_ms": 20.217680203802693,
+            "speed_kmh": 72.7836487336897,
+            "lane": 0
+          }
+        },
+        {
+          "step": 346,
+          "ego_speed_ms": 10.123394185475354,
+          "ego_speed_kmh": 36.44421906771127,
+          "ego_lane": 2,
+          "action": "LANE_LEFT",
+          "lane_change_in_progress": "True",
+          "collided_vehicle": {
+            "rel_x": -8.788621745766477,
+            "rel_y": -7.605490795872763,
+            "speed_ms": 20.21882459539286,
+            "speed_kmh": 72.7877685434143,
+            "lane": 0
+          }
+        },
+        {
+          "step": 347,
+          "ego_speed_ms": 10.082262790316902,
+          "ego_speed_kmh": 36.296146045140844,
+          "ego_lane": 2,
+          "action": "FASTER",
+          "lane_change_in_progress": "True",
+          "collided_vehicle": {
+            "rel_x": -6.176520962122822,
+            "rel_y": -6.173826660437946,
+            "speed_ms": 20.21999685768533,
+            "speed_kmh": 72.7919886876672,
+            "lane": 0
+          }
+        },
+        {
+          "step": 348,
+          "ego_speed_ms": 11.721508526877935,
+          "ego_speed_kmh": 42.19743069676057,
+          "ego_lane": 1,
+          "action": "FASTER",
+          "lane_change_in_progress": "True",
+          "collided_vehicle": {
+            "rel_x": -3.558368868333446,
+            "rel_y": -4.747979382690369,
+            "speed_ms": 20.22119622509163,
+            "speed_kmh": 72.79630641032988,
+            "lane": 0
+          }
+        }
+      ]
+    }
+  ]
+}

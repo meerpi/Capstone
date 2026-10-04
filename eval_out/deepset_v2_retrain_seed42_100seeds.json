@@ -1,0 +1,18 @@
+{
+  "model_path": "scratch/deepset_v2_highway_retrain_seed42/deepset_v2_highway_best.pt",
+  "n_episodes": 100,
+  "seed_start": 2000,
+  "seed_end": 2099,
+  "total_crashes": 0,
+  "crash_rate_pct": 0.0,
+  "crash_ci_low_pct": 0.0,
+  "crash_ci_high_pct": 3.6216692645176405,
+  "mean_speed_ms": 19.931040651487123,
+  "mean_speed_kmh": 71.75174634535365,
+  "mean_lane_changes": 7.95,
+  "mean_distinct_lane_changes": 2.32,
+  "mean_rapid_reversals": 5.63,
+  "mean_return": 162.81512070527344,
+  "category_breakdown": {},
+  "crashes": []
+}
