@@ -9,6 +9,7 @@ This repository presents a comprehensive autonomous highway driving benchmark in
 1. **Degraded Radar Sensor Coverage (Ablation Benchmark):** How classical control heuristics and deep reinforcement learning policies perform when stripped from **Full 360° ADAS Perception** down to **Front-Only Radar** (inducing trailing blind spots).
 2. **Constrained Safe Reinforcement Learning (PPO-Lagrangian):** A dual-critic, PID-regulated Lagrangian policy formulation that decouples collision penalties from performance rewards, using separate unit-scale advantage normalization ($A_{\text{adj}} = \text{norm}(A_R) - \lambda \cdot \text{norm}(A_C)$) to achieve a **48 percentage point reduction in crash rate** over uncalibrated baselines across 100 deterministic benchmark seeds.
 3. **Multi-Paradigm Comparative Study:** Comparing Classical Heuristics (**IDM**, **IDM+MOBIL**), On-Policy Feedforward RL (**PPO** + Action Masking), On-Policy Recurrent RL (**PPO+LSTM** POMDP state tracking), and Constrained Safe RL (**PPO-Lagrangian**).
+4. **Permutation-Invariant Set Architectures (DeepSet v2) & Floor-Speed Root Cause (Hypothesis H-B):** Introducing DeepSet v2 for variable-vehicle set observation without arbitrary sensor-index ordering. Diagnosing and proving that **77.8% of crashes** in baseline Highway-Env RL models stem from a simulator action discretization flaw (the $20\,\text{m/s}$ speed floor), and establishing a validated fix (`target_speeds = [10, 15, 20, 25, 30]`) paired with chatter-penalized 50-episode model selection to achieve a **0.0% crash rate (0/100, 95% Clopper-Pearson CI [0.0%, 3.6%])**.
 
 > [!NOTE]
 > 📖 **Comprehensive Technical Report & Post-Mortem:**  
@@ -18,18 +19,21 @@ This repository presents a comprehensive autonomous highway driving benchmark in
 
 ## 1. Executive Summary & Headline Results
 
-Across identical, reproducible test seeds ($N = 30$ episodes per condition, seeds 2000–2029) in dense 4-lane highway traffic:
+Across identical, reproducible test seeds ($N = 30$ to $100$ episodes per condition, seeds 2000–2099) in dense 4-lane highway traffic:
 
-| Sensor Tier | Policy Paradigm | Controller / Model | Crash Rate ($N/30$) | Episode Duration | Mean Speed | Lane Changes / ep | Primary Failure Mode / Behavioral Dynamic |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Full ADAS** (360° Omnidirectional) | Classical Heuristic | **IDM Only** | **0.0%** (0/30) | 200.0 ± 0.0 | 81.4 km/h | 0.00 | Passive car-following; zero overtaking initiative. |
-| | Classical Heuristic | **IDM + MOBIL** | **6.7%** (2/30) | 193.6 ± 32.5 | 83.4 km/h | 5.80 | High mobility with active overtaking; occasional tight squeeze. |
-| | On-Policy Feedforward RL | **PPO (MLP)** | **0.0%** (0/30) | 200.0 ± 0.0 | 73.3 km/h | 0.67 | Prudent defensive cruising; tactical lane changes when blocked. |
-| | On-Policy Recurrent RL | **PPO + LSTM** | **0.0%** (0/30) | 200.0 ± 0.0 | 72.6 km/h | 1.53 | Fluid overtaking; stable velocity and zero crashes. |
-| **Front-Only Radar** (Blind Spots $x < 0$) | Classical Heuristic | **IDM Only** | **0.0%** (0/30) | 200.0 ± 0.0 | 81.4 km/h | 0.00 | Front-only sensing suffices for longitudinal car-following. |
-| | Classical Heuristic | **IDM + MOBIL** | **50.0%** (15/30) | 147.1 ± 64.3 | 84.2 km/h | 4.40 | **Catastrophic Blind-Spot Collapse (7.5x crash surge)**. |
-| | On-Policy Feedforward RL | **PPO (MLP)** | **10.0%** (3/30) | 187.8 ± 40.9 | 79.3 km/h | 1.53 | **80% crash reduction vs MOBIL** via learned margin compliance. |
-| | On-Policy Recurrent RL | **PPO + LSTM** | **0.0%** (0/30) | 200.0 ± 0.0 | 72.6 km/h | 1.53 | **Hidden state memory tracks trailing traffic through blind spots**. |
+| Sensor Tier | Policy Paradigm | Controller / Model | Crash Rate (95% CI) | Mean Speed | Lane Changes / ep | Primary Failure Mode / Behavioral Dynamic |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
+| **Full ADAS** (360° Omnidirectional) | Classical Heuristic | **IDM Only** | **0.0%** (0/30) | 81.4 km/h | 0.00 | Passive car-following; zero overtaking initiative. |
+| | Classical Heuristic | **IDM + MOBIL** | **6.7%** (2/30) | 83.4 km/h | 5.80 | High mobility with active overtaking; occasional tight squeeze. |
+| | On-Policy Feedforward RL | **PPO (MLP)** | **0.0%** (0/30) | 73.3 km/h | 0.67 | Prudent defensive cruising; tactical lane changes when blocked. |
+| | On-Policy Recurrent RL | **PPO + LSTM** | **0.0%** (0/30) | 72.6 km/h | 1.53 | Fluid overtaking; stable velocity and zero crashes. |
+| | Safe RL (Lagrangian) | **PPO-Lagrangian** | **34.0%** [24.8%, 44.2%] | 78.3 km/h | 1.66 | Decoupled cost critic; balances speed and collision budget. |
+| | Permutation-Invariant Set RL | **DeepSet v2 (Baseline)** | **27.0%** [18.6%, 36.8%] | 72.8 km/h | 14.2 | Trapped by $20\,\text{m/s}$ speed floor behind slow traffic (78% of crashes). |
+| | **Permutation-Invariant Set RL** | **DeepSet v2 (Retrained + Fix)** | **0.0% [0.0%, 3.6%]** (0/100) | **71.8 km/h** | **2.32 (deduped)** | **Flawless 100-seed survival; floor-speed and lane-change crashes eliminated.** |
+| **Front-Only Radar** (Blind Spots $x < 0$) | Classical Heuristic | **IDM Only** | **0.0%** (0/30) | 81.4 km/h | 0.00 | Front-only sensing suffices for longitudinal car-following. |
+| | Classical Heuristic | **IDM + MOBIL** | **50.0%** (15/30) | 84.2 km/h | 4.40 | **Catastrophic Blind-Spot Collapse (7.5x crash surge)**. |
+| | On-Policy Feedforward RL | **PPO (MLP)** | **10.0%** (3/30) | 79.3 km/h | 1.53 | **80% crash reduction vs MOBIL** via learned margin compliance. |
+| | On-Policy Recurrent RL | **PPO + LSTM** | **0.0%** (0/30) | 72.6 km/h | 1.53 | **Hidden state memory tracks trailing traffic through blind spots**. |
 
 ---
 
@@ -90,7 +94,7 @@ All episodes recorded at 10 FPS with complete telemetry HUD overlays displaying 
 | *Zero lane changes; strictly maintains headway.* | *Identical performance; unaffected by rear sensor removal.* |
 | [Download MP4](visualizations/classical_idm_full_adas_seed2002.mp4) | [Download MP4](visualizations/classical_idm_front_only_seed2002.mp4) |
 
-### 3.5 Optimal Tactical Overtaker (Anti-Jitter Regularization & Top 10 Demonstrations)
+### 3.5 Optimal Tactical Overtaker (Top 10 Demonstrations)
 
 Trained with continuous headway incentives, anti-jitter regularization ($-0.12$ action-switching penalty), and strictly adjacent-corridor overtake accounting, this 4-lane PPO agent exhibits dynamic acceleration up to $108.0\text{ km/h}$, proactive slalom lane changes around slow clusters, and stable cruising without stutter.
 
@@ -112,45 +116,6 @@ Every episode in this Top 10 completed the full $500\text{ steps}$ ($100\text{ s
 
 #### Highlight: Rank #1 (Seed 3094: 5 Overtakes, 4 Lane Changes, 108 km/h Sprint)
 ![Rank 1 Seed 3094](visualizations/top10/ppo_top_1_seed_3094.gif)
-
----
-
-## 4. Repository Structure
-
-```
-Capstone/
-├── .gitignore                      # Clean exclusion of temporary/venv/scratch files
-├── requirements.txt                # Pinned dependencies
-├── README.md                       # Comprehensive documentation & quickstart
-├── PROJECT_CHRONICLE_AND_POSTMORTEM.md # Complete technical trajectory, what worked, and post-mortem
-├── benchmark_results.md            # Quantitative benchmark report
-├── env_config.py                   # Sensor tiers, wrappers, frame stacking, and anti-jitter reward
-├── train_optimal_overtaker.py      # End-to-end PPO trainer with anti-jitter and adjacent overtake bonuses
-├── ppo.py                          # Feedforward PPO architecture
-├── ppo_lstm.py                     # Recurrent PPO (LSTM) with decoupled Actor-Critic
-├── baseline_classical.py           # Classical IDM car-following and MOBIL lane-changing controllers
-├── record_optimal_overtaker.py     # High-definition telemetry HUD episode recorder
-├── render_top10.py                 # Telemetry renderer for top demonstration episodes
-├── run_batch_render.py             # Automated batch rendering script for Top 10 seeds
-├── run_comparison_benchmark.py     # 30-seed automated benchmark suite
-├── record_visual_driving.py        # Multi-model visual driving recorder
-├── models/                         # Checkpoints for PPO, PPO-LSTM, and Optimal Overtaker
-│   ├── ppo_optimal_overtaker_4lane_best.pt
-│   ├── ppo_optimal_overtaker_4lane.pt
-│   ├── ppo_highway_full_adas_seed101.pt
-│   ├── ppo_highway_front_only_seed101.pt
-│   ├── ppo_lstm_highway_full_adas_seed101.pt
-│   └── ppo_lstm_highway_front_only_seed101.pt
-└── visualizations/                 # Generated GIFs and MP4 videos with telemetry HUD
-    ├── top10/                      # Top 10 non-idle overtaking and avoidance runs (GIF + MP4)
-    │   ├── manifest.json           # Telemetry metrics manifest across all 10 runs
-    │   ├── ppo_top_1_seed_3094.gif / .mp4
-    │   └── ...
-    ├── classical_idm_*.mp4 / .gif
-    ├── classical_mobil_*.mp4 / .gif
-    ├── ppo_*.mp4 / .gif
-    └── ppo_lstm_*.mp4 / .gif
-```
 
 ---
 
@@ -190,9 +155,136 @@ Evaluated across 100 deterministic benchmark seeds in dense 4-lane traffic using
 
 ---
 
-## 5. Quickstart & Reproduction Guide
+## 5. DeepSet v2 Architecture & Floor-Speed Root Cause Resolution (Hypothesis H-B)
 
-### 5.1 Environment Setup
+### 5.1 Permutation-Invariant DeepSet v2 Architecture
+Standard MLP policies flatten fixed vehicle observation matrices, binding the policy's weights to arbitrary sensor-ordering indices. In real driving, surrounding traffic is an unordered, variable-cardinality set.
+
+**DeepSet v2** (`deepset_v2/` module) implements a mathematically rigorous permutation-invariant set architecture:
+1. **Ego Encoder $\phi_{\text{ego}}$:** Maps ego state $(y, v_x, v_y, \text{heading})$ through an MLP $\mathbb{R}^4 \to \mathbb{R}^{64}$.
+2. **Vehicle Set Encoder $\phi_{\text{veh}}$:** Maps each observed surrounding vehicle $(\text{presence}, x_{\text{rel}}, y_{\text{rel}}, v_{x,\text{rel}}, v_{y,\text{rel}})$ through a shared MLP $\mathbb{R}^5 \to \mathbb{R}^{64}$.
+3. **Symmetric Set Aggregator $\bigoplus$:** Computes the sum-pool across all valid vehicles:
+   $$z_{\text{context}} = \sum_{i=1}^{N_{\text{veh}}} \phi_{\text{veh}}(v_i) \cdot \mathbb{I}(\text{presence}_i > 0)$$
+4. **Policy & Value Heads $\rho$:** Concatenates $[z_{\text{ego}}, z_{\text{context}}] \in \mathbb{R}^{128}$ and predicts discrete action logits and state value $V(s)$.
+
+Automated invariance unit tests (`tests/deepset_v2/test_deepset_v2.py`) verify that row shuffling in the observation matrix yields identical logits within $\le 10^{-6}$ precision.
+
+### 5.2 Hypothesis H-B: The Simulator Floor-Speed Rear-End Pathology
+Despite permutation invariance, the initial DeepSet v2 baseline showed a **27.0% crash rate** (27/100 crashes). A systematic step-by-step diagnostic audit of all 27 crashes (`scripts/diagnose_hb_crashes.py`) revealed a startling finding:
+
+$$\text{Floor-Speed Rear-Ends accounted for } \mathbf{77.8\%} \text{ of all crashes (21 / 27)}$$
+
+- **The Simulator Flaw:** In Highway-Env's default `DiscreteMetaAction`, target speeds are hard-coded to `[20, 25, 30]` m/s ($72$, $90$, $108$ km/h).
+- **The Physical Conflict:** Surrounding ambient traffic commonly travels at $13$–$18\,\text{m/s}$ ($47$–$65\,\text{km/h}$).
+- **The Inevitable Crash:** When boxed into a lane by adjacent traffic, the ego vehicle executes action `SLOWER` (4) to brake, but the controller clamps at the floor speed of $20\,\text{m/s}$ ($72\,\text{km/h}$). Closing on the lead vehicle at $\Delta v = +5\,\text{m/s}$ without the physical ability to brake lower, the ego violently rear-ends the lead vehicle.
+- **Cross-Pipeline Replication:** The same diagnostic applied to the legacy Optimal Overtaker baseline (`models/ppo_optimal_overtaker_4lane_best.pt`, 10% crash rate) revealed that **80.0% of its crashes (8 / 10)** were the exact same floor-speed rear-end failure mode.
+
+### 5.3 The Validated Fix: Extended Target Speeds
+We extended the discrete action target speeds to include realistic lower speeds:
+$$\text{target\_speeds} = [10, 15, 20, 25, 30] \quad (36, 54, 72, 90, 108\text{ km/h})$$
+This allows the policy to step down to $10\,\text{m/s}$ and $15\,\text{m/s}$ to match lead traffic speed when lane changes are blocked.
+
+### 5.4 Lateral Debounce Lockout Safety Audit
+To curb rapid lane-boundary oscillation, a 5-step lateral debounce wrapper was initially tested. However, deep telemetry extraction of a test crash (Seed 2000, step 272) revealed that debounce introduced a severe **action lockout hazard**:
+- At step 272, closing on traffic in Lane 3, the policy chose `LANE_LEFT` to evade.
+- The debounce timer locked the lateral action and forced `IDLE`, causing a preventable rear-end collision.
+- Removing the debounce allowed the policy to execute `LANE_LEFT` immediately and survive all 500 steps.
+- **Verdict:** Lateral debounce was proven unsafe and permanently disabled (`lateral_debounce_steps = 0`).
+
+### 5.5 Hardened Checkpoint Selection
+Small validation sets ($N=10$) suffer from high statistical variance (Clopper-Pearson 95% CI upper bound is $30.8\%$ even with 0 crashes), allowing noisy high-weaving checkpoints to be selected as "best":
+1. **Sample Size:** Increased validation budget from 10 to **50 episodes** (seeds 3000–3049), shrinking the 95% CI upper bound to **$7.1\%$**.
+2. **Chatter Penalty:** Hardened comparator `is_better_candidate` penalizes models exceeding $\le 2.0$ rapid reversals/ep within $\le 5$ steps, preventing high-frequency weaving models from claiming best checkpoint status.
+
+### 5.6 Master 100-Seed Telemetry Benchmark (Seeds 2000–2099)
+
+Evaluated across 100 standard benchmark seeds (50,000 environment steps) comparing the baseline to the retrained deliverable:
+
+| Telemetry Metric | DeepSet v2 Baseline (1M Steps) | DeepSet v2 Retrained (Run 1: Seed 42) | Impact / Delta |
+| :--- | :---: | :---: | :---: |
+| **Crash Rate (Clopper-Pearson 95% CI)** | **27.0%** [18.6%, 36.8%] | **0.0% [0.0%, 3.6%]** (0/100) | **-27.0% (100% Elimination)** |
+| **Floor-Speed Rear-End Crashes** | **21 / 27 (77.8%)** | **0 / 100 (0.0%)** | **Completely Eliminated** |
+| **Lane-Change Collisions** | **5 / 27 (18.5%)** | **0 / 100 (0.0%)** | **Completely Eliminated** |
+| **Blind-Spot / Other Crashes** | **1 / 27 (3.7%)** | **0 / 100 (0.0%)** | **Completely Eliminated** |
+| **Mean Speed** | 72.8 km/h (20.2 m/s) | **71.8 km/h (19.9 m/s)** | High throughput preserved |
+| **Raw Lane Changes** | 14.2 / ep | **7.95 / ep** | Calm tactical driving |
+| **True Distinct Maneuvers (deduped)**| — | **2.32 / ep** | Clean, decisive passing |
+| **Rapid Reversals ($\le 5$ steps)** | High | **5.63 / ep** | Controlled, no weaving |
+| **Mean Episode Duration** | 430.0 steps | **500.0 steps** | 100% full-duration completion |
+| **Mean Return** | 120.4 | **162.82** | $+42.4$ reward improvement |
+
+---
+
+## 6. Repository Structure
+
+```
+Capstone/
+├── .gitignore                      # Clean exclusion of temporary/venv/scratch files
+├── requirements.txt                # Pinned dependencies
+├── README.md                       # Comprehensive documentation & quickstart
+├── PROJECT_CHRONICLE_AND_POSTMORTEM.md # Complete technical trajectory, what worked, and post-mortem
+├── benchmark_results.md            # Quantitative benchmark report
+├── env_config.py                   # Sensor tiers, wrappers, extended target speeds, and anti-jitter reward
+├── train_optimal_overtaker.py      # End-to-end PPO / PPO-Lagrangian trainer with hardened selection
+├── ppo.py                          # Feedforward PPO architecture
+├── ppo_lstm.py                     # Recurrent PPO (LSTM) with decoupled Actor-Critic
+├── baseline_classical.py           # Classical IDM car-following and MOBIL lane-changing controllers
+│
+├── deepset_v2/                     # DeepSet v2 Permutation-Invariant Set Observation Module
+│   ├── __init__.py
+│   ├── env.py                      # DeepSet observation wrapper (74-dim: 4 ego + 14x5 vehicles)
+│   └── model.py                    # DeepSetAgent with symmetric sum-pooling and actor-critic heads
+│
+├── scripts/                        # Diagnostic, training, and benchmarking tool suite
+│   ├── train_deepset_v2.py         # 1M-step DeepSet v2 trainer with 50-seed chatter-penalized validation
+│   ├── diagnose_hb_crashes.py      # 5-step pre-impact telemetry extractor and crash categorizer
+│   ├── diagnose_legacy_crashes.py  # Diagnostic tool for Optimal Overtaker & Lagrangian models
+│   ├── verify_lane_change_dynamics.py # Lane-change trajectory visualizer and deduplication auditor
+│   ├── evaluate_comparison_100seeds.py # 100-seed 3-way Lagrangian benchmark script
+│   └── run_batch_render.py         # Automated batch rendering script for Top 10 seeds
+│
+├── parity/                         # Systematic parity ladder validating against SB3 baselines
+│   ├── evaluator.py                # Standardized evaluation harness with Clopper-Pearson CIs
+│   ├── reward_wrapper.py           # Clean reward tracking wrapper
+│   ├── all_baselines_summary.json  # Comprehensive parity benchmark outputs across 7 rungs
+│   └── report.md                   # Systematic parity report
+│
+├── eval_out/                       # Serialized benchmark telemetry and failure-mode diagnoses
+│   ├── deepset_v2_retrain_seed42_100seeds.json # 100-seed 0.0% crash rate deliverable telemetry
+│   ├── deepset_v2_report.md        # Technical findings report
+│   └── crash_diagnostics/          # Telemetry JSONs and GIF animations of diagnosed crashes
+│
+├── tests/                          # Automated unit test suite (83 tests)
+│   ├── deepset_v2/
+│   │   ├── conftest.py
+│   │   └── test_deepset_v2.py      # 26 tests: permutation invariance, target speeds, models guard
+│   ├── test_model_selection.py     # 8 tests: hardened lexicographic and chatter comparator
+│   ├── test_lateral_debounce.py    # Debounce wrapper verification
+│   ├── test_checkpoint_resume.py   # Checkpoint serialization, RNG state, and training resume
+│   └── test_ppo_lagrangian.py      # Cost-GAE symmetry and dual-critic advantage checks
+│
+├── models/                         # Canonical pre-trained checkpoints (Read-Only Guarded)
+│   ├── ppo_optimal_overtaker_4lane_best.pt
+│   ├── ppo_optimal_overtaker_4lane.pt
+│   ├── ppo_highway_full_adas_seed101.pt
+│   ├── ppo_highway_front_only_seed101.pt
+│   ├── ppo_lstm_highway_full_adas_seed101.pt
+│   └── ppo_lstm_highway_front_only_seed101.pt
+│
+└── visualizations/                 # Generated GIFs and MP4 videos with telemetry HUD
+    ├── top10/                      # Top 10 non-idle overtaking runs (GIF + MP4)
+    ├── lane_change_verification/   # High-resolution GIFs of tactical lane-change dynamics
+    ├── classical_idm_*.mp4 / .gif
+    ├── classical_mobil_*.mp4 / .gif
+    ├── ppo_*.mp4 / .gif
+    └── ppo_lstm_*.mp4 / .gif
+```
+
+---
+
+## 7. Quickstart & Reproduction Guide
+
+### 7.1 Environment Setup
 ```bash
 git clone git@github.com:meerpi/Capstone.git
 cd Capstone
@@ -201,25 +293,41 @@ source .venv/bin/activate
 uv pip install -e .
 ```
 
-### 5.2 Run the Automated Unit Test Suite (43 Tests)
-Run the full test suite verifying continuous bounds, truncation bootstrapping, checkpoint resume, and Lagrangian cost-GAE symmetry:
+### 7.2 Run the Automated Unit Test Suite (83 Tests)
+Run the full test suite verifying permutation invariance, model guards, truncation bootstrapping, and checkpoint resume:
 ```bash
-PYTHONPATH=. uv run --with pytest pytest tests/ -v
+PYTHONPATH=. uv run --with pytest tests/ -v
 ```
 
-### 5.3 Run the 100-Seed 3-Way Benchmark
-Reproduce the exact 100-seed Clopper-Pearson comparison table across baseline, failed calibration, and PPO-Lagrangian checkpoints:
+### 7.3 Evaluate DeepSet v2 on 100 Benchmark Seeds
+Evaluate the retrained DeepSet v2 deliverable on seeds 2000–2099 with full 5-step pre-impact telemetry logging:
 ```bash
-uv run python scripts/evaluate_comparison_100seeds.py \
-  --baseline models/ppo_optimal_overtaker_4lane_best.pt \
-  --failed-run scratch/archived_runs/failed_calibration_82pct_crash/ppo_optimal_overtaker_4lane_best.pt \
-  --lagrangian scratch/ppo_lagrangian_1m_sep_norm/ppo_optimal_overtaker_4lane_best.pt \
+python scripts/diagnose_hb_crashes.py \
+  --model-path scratch/deepset_v2_highway_retrain_seed42/deepset_v2_highway_best.pt \
   --episodes 100 \
   --seed-start 2000 \
-  --device cuda
+  --target-speeds 10 15 20 25 30 \
+  --output-json eval_out/deepset_v2_retrain_seed42_100seeds.json
 ```
 
-### 5.4 Train PPO-Lagrangian from Scratch
+### 7.4 Train DeepSet v2 from Scratch
+Train DeepSet v2 with extended speeds and hardened 50-episode validation:
+```bash
+python scripts/train_deepset_v2.py \
+  --scenario highway \
+  --tier full_adas \
+  --seed 42 \
+  --total-timesteps 1000000 \
+  --num-envs 8 \
+  --num-steps 512 \
+  --val-seeds 50 \
+  --val-frequency 50000 \
+  --val-start-step 50000 \
+  --target-speeds 10 15 20 25 30 \
+  --output-dir scratch/deepset_v2_highway_retrain_seed42
+```
+
+### 7.5 Train PPO-Lagrangian from Scratch
 Train the constrained safe RL agent with separate advantage normalization and PID multiplier regulation:
 ```bash
 uv run python train_optimal_overtaker.py \
@@ -235,35 +343,9 @@ uv run python train_optimal_overtaker.py \
   --cuda
 ```
 
-### 5.5 Render & Record Any Optimal Driving Episode
-To evaluate and record an episode with full real-time telemetry HUD overlay (saved as both `.gif` and `.mp4`):
-```bash
-# Record Rank #1 episode (Seed 3094, 5 overtakes, 108 km/h)
-python record_optimal_overtaker.py --seed 3094 --steps 500
-
-# Record Rank #2 episode (Seed 3115, 15 lane changes)
-python record_optimal_overtaker.py --seed 3115 --steps 500
-```
-
-### 5.6 Batch Render the Top 10 Demonstrations
-To batch render all Top 10 non-idle overtaking seeds to `visualizations/top10/`:
-```bash
-python run_batch_render.py
-```
-
-### 5.7 Classical Baselines & Sensor Ablation Benchmark
-To run the classical IDM/MOBIL heuristic baselines and evaluate performance across the 30-seed benchmark:
-```bash
-# Run classical baselines standalone
-python baseline_classical.py
-
-# Run comparative benchmark suite across models and sensor tiers
-python run_comparison_benchmark.py
-```
-
 ---
 
-## 6. Citation & Reference
+## 8. Citation & Reference
 
 If you use this benchmark or codebase in your research, please cite:
 ```bibtex
