@@ -1,17 +1,17 @@
 {
-  "ppo_lstm_front_only": {
+  "ppo_lstm_full_adas": {
     "scenario": "highway",
-    "tier": "front_only",
-    "model_path": "models/ppo_lstm_highway_front_only_seed101.pt",
+    "tier": "full_adas",
+    "model_path": "scratch/checkpoints/ppo_lstm_smoke_50k.pt",
     "episodes": 30,
-    "crashes": 7,
-    "crash_fraction": "7/30",
-    "crash_rate": 23.333333333333332,
-    "mean_duration": 388.96666666666664,
-    "std_duration": 201.3440642835597,
-    "mean_speed_kmh": 73.71169612167958,
-    "mean_lane_changes": 1.5333333333333334,
-    "train_duration_sec": 3909.241201877594,
+    "crashes": 30,
+    "crash_fraction": "30/30",
+    "crash_rate": 100.0,
+    "mean_duration": 72.5,
+    "std_duration": 53.854588167273796,
+    "mean_speed_kmh": 90.0,
+    "mean_lane_changes": 0.0,
+    "train_duration_sec": 192.5208294391632,
     "policy": "PPO + LSTM"
   }
 }

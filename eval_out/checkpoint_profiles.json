@@ -1,0 +1,156 @@
+{
+  "ppo_highway_front_only_seed101.pt": {
+    "filename": "ppo_highway_front_only_seed101.pt",
+    "model_path": "models/ppo_highway_front_only_seed101.pt",
+    "sha256": "df6bcfc5df17be550e3dfcc9947b29a624187a2637ee5bf52c2c3079ed1fe332",
+    "input_dim": 50,
+    "architecture": "Feedforward PPO Agent (MLP: [50->256->256->5])",
+    "env_profile": {
+      "profile_name": "legacy_50",
+      "vehicles_count": 10,
+      "vehicles_density": 1.0,
+      "observation": {
+        "vehicles_count": 10
+      },
+      "duration": 40,
+      "policy_frequency": 5,
+      "step_cap": 200,
+      "frame_stack_k": null,
+      "include_continuous_features": null
+    },
+    "evidence": {
+      "weight_shape": "actor.0.weight shape [256, 50], critic.0.weight shape [256, 50]",
+      "training_script_and_flags": "ppo.py --scenario highway --tier front_only --seed 101; legacy observation filter with vehicles_count=10 and duration=40s (40s * 5Hz = 200 step cap).",
+      "git_log": "Commit f5d4705 ('Add initial benchmark models and PPO baseline')"
+    }
+  },
+  "ppo_highway_full_adas_seed101.pt": {
+    "filename": "ppo_highway_full_adas_seed101.pt",
+    "model_path": "models/ppo_highway_full_adas_seed101.pt",
+    "sha256": "07b097de08327ace11cb100fe65e6af4e70466af24c594ffb81a468eee5cca25",
+    "input_dim": 75,
+    "architecture": "Feedforward PPO Agent (MLP: [75->256->256->5])",
+    "env_profile": {
+      "profile_name": "current_75",
+      "vehicles_count": 14,
+      "vehicles_density": 1.4,
+      "observation": {
+        "vehicles_count": 15
+      },
+      "duration": 100,
+      "policy_frequency": 5,
+      "step_cap": 500,
+      "frame_stack_k": null,
+      "include_continuous_features": null
+    },
+    "evidence": {
+      "weight_shape": "actor.0.weight shape [256, 75], critic.0.weight shape [256, 75]",
+      "training_script_and_flags": "ppo.py --scenario highway --tier full_adas --seed 101; benchmark settings with 15 observation vehicles (15 * 5 = 75 dims), 14 scene vehicles, density 1.4, duration=100s (100s * 5Hz = 500 step cap).",
+      "git_log": "Commit f5d4705 ('Add initial benchmark models and PPO baseline')"
+    }
+  },
+  "ppo_lstm_highway_front_only_seed101.pt": {
+    "filename": "ppo_lstm_highway_front_only_seed101.pt",
+    "model_path": "models/ppo_lstm_highway_front_only_seed101.pt",
+    "sha256": "746faea35406ad49c49a9e9740a837e528b5789b7b26915ad370cc762d3dd21b",
+    "input_dim": 50,
+    "architecture": "Recurrent PPO Agent (LSTM: feature_net [50->128], LSTM [128->128], head [128->5])",
+    "env_profile": {
+      "profile_name": "legacy_50",
+      "vehicles_count": 10,
+      "vehicles_density": 1.0,
+      "observation": {
+        "vehicles_count": 10
+      },
+      "duration": 40,
+      "policy_frequency": 5,
+      "step_cap": 200,
+      "frame_stack_k": null,
+      "include_continuous_features": null
+    },
+    "evidence": {
+      "weight_shape": "actor.feature_net.0.weight shape [128, 50], critic.feature_net.0.weight shape [128, 50]",
+      "training_script_and_flags": "ppo_lstm.py --scenario highway --tier front_only --seed 101; checkpoint dict stores obs_dim=50, duration=40s (200 step cap).",
+      "git_log": "Commit f5d4705 ('Add initial benchmark models and PPO baseline')"
+    }
+  },
+  "ppo_lstm_highway_full_adas_seed101.pt": {
+    "filename": "ppo_lstm_highway_full_adas_seed101.pt",
+    "model_path": "models/ppo_lstm_highway_full_adas_seed101.pt",
+    "sha256": "e2759653e650d6c769ca0a98dd39d057fbcf12ffef80a20af141546e45022a58",
+    "input_dim": 50,
+    "architecture": "Recurrent PPO Agent (LSTM: feature_net [50->128], LSTM [128->128], head [128->5])",
+    "env_profile": {
+      "profile_name": "legacy_50",
+      "vehicles_count": 10,
+      "vehicles_density": 1.0,
+      "observation": {
+        "vehicles_count": 10
+      },
+      "duration": 40,
+      "policy_frequency": 5,
+      "step_cap": 200,
+      "frame_stack_k": null,
+      "include_continuous_features": null
+    },
+    "evidence": {
+      "weight_shape": "actor.feature_net.0.weight shape [128, 50], critic.feature_net.0.weight shape [128, 50]",
+      "training_script_and_flags": "ppo_lstm.py --scenario highway --tier full_adas --seed 101; checkpoint stores obs_dim=50 (trained before full_adas was switched to 15 vehicles/75 dims); duration=40s (200 step cap).",
+      "git_log": "Commit f5d4705 ('Add initial benchmark models and PPO baseline')"
+    }
+  },
+  "ppo_optimal_overtaker_4lane.pt": {
+    "filename": "ppo_optimal_overtaker_4lane.pt",
+    "model_path": "models/ppo_optimal_overtaker_4lane.pt",
+    "sha256": "a775eaf3af9713693f826f367220d5f0d33d9ab2fb9be45e3b6b0f8c89ec030b",
+    "input_dim": 81,
+    "architecture": "OptimalAgent (MLP: [81->256(LayerNorm)->256(LayerNorm)->5])",
+    "env_profile": {
+      "profile_name": "optimal_overtaker_4lane_81",
+      "vehicles_count": 14,
+      "vehicles_density": 1.4,
+      "observation": {
+        "wrapper": "TacticalLaneObservationWrapper",
+        "lanes_count": 4,
+        "base_obs_dim": 27
+      },
+      "duration": 100,
+      "policy_frequency": 5,
+      "step_cap": 500,
+      "frame_stack_k": 3,
+      "include_continuous_features": false
+    },
+    "evidence": {
+      "weight_shape": "actor.0.weight shape [256, 81], critic.0.weight shape [256, 81]",
+      "training_script_and_flags": "train_optimal_overtaker.py --lanes 4 --density 1.4 --vehicles 14 --frame-stack 3; checkpoint args dict specifies duration=100s (500 step cap), frame_stack=3, 27 base discrete features (include_continuous_features=False).",
+      "git_log": "Commit a679bb9 ('feat(optimal_overtaker): add 4-lane optimal overtaker training script and benchmark models')"
+    }
+  },
+  "ppo_optimal_overtaker_4lane_best.pt": {
+    "filename": "ppo_optimal_overtaker_4lane_best.pt",
+    "model_path": "models/ppo_optimal_overtaker_4lane_best.pt",
+    "sha256": "90b8721436804b7f8bc08cf01e1d81e1d324ad27e78d50297688b0a17a80fb10",
+    "input_dim": 81,
+    "architecture": "OptimalAgent (MLP: [81->256(LayerNorm)->256(LayerNorm)->5])",
+    "env_profile": {
+      "profile_name": "optimal_overtaker_4lane_81",
+      "vehicles_count": 14,
+      "vehicles_density": 1.4,
+      "observation": {
+        "wrapper": "TacticalLaneObservationWrapper",
+        "lanes_count": 4,
+        "base_obs_dim": 27
+      },
+      "duration": 100,
+      "policy_frequency": 5,
+      "step_cap": 500,
+      "frame_stack_k": 3,
+      "include_continuous_features": false
+    },
+    "evidence": {
+      "weight_shape": "actor.0.weight shape [256, 81], critic.0.weight shape [256, 81]",
+      "training_script_and_flags": "train_optimal_overtaker.py --lanes 4 --density 1.4 --vehicles 14 --frame-stack 3; best validation checkpoint from training run with duration=100s (500 step cap), frame_stack=3, 27 base discrete features (include_continuous_features=False).",
+      "git_log": "Commit a679bb9 ('feat(optimal_overtaker): add 4-lane optimal overtaker training script and benchmark models')"
+    }
+  }
+}

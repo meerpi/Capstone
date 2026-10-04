@@ -117,6 +117,60 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Explicit output path for model checkpoint.",
     )
+    parser.add_argument(
+        "--keep-phantom-samples",
+        "--keep_phantom_samples",
+        dest="keep_phantom_samples",
+        action="store_true",
+        default=False,
+        help="Restore legacy unmasked phantom samples and pre-LSTM reset timing.",
+    )
+    parser.add_argument(
+        "--profile",
+        type=str,
+        default=None,
+        help="Environment profile name (e.g. legacy_50, current_75).",
+    )
+    parser.add_argument(
+        "--eval-results-path",
+        "--eval_results_path",
+        dest="eval_results_path",
+        type=str,
+        default=None,
+        help="Path to save evaluation results JSON.",
+    )
+    parser.add_argument(
+        "--eval-only",
+        "--eval_only",
+        dest="eval_only",
+        action="store_true",
+        default=False,
+        help="Evaluate checkpoint without training.",
+    )
+    parser.add_argument(
+        "--model-path",
+        "--model_path",
+        dest="model_path",
+        type=str,
+        default=None,
+        help="Path to model checkpoint for evaluation.",
+    )
+    parser.add_argument(
+        "--eval-episodes",
+        "--eval_episodes",
+        dest="eval_episodes",
+        type=int,
+        default=30,
+        help="Number of episodes for evaluation.",
+    )
+    parser.add_argument(
+        "--eval-seed-start",
+        "--eval_seed_start",
+        dest="eval_seed_start",
+        type=int,
+        default=2000,
+        help="Starting seed for evaluation.",
+    )
     return parser.parse_args()
 
 
@@ -140,10 +194,17 @@ def lstm_init(lstm: nn.LSTM) -> nn.LSTM:
 class RecurrentActor(nn.Module):
     """Recurrent policy network with independent LSTM memory for action selection."""
 
-    def __init__(self, obs_dim: int, action_dim: int, hidden_dim: int = 128) -> None:
+    def __init__(
+        self,
+        obs_dim: int,
+        action_dim: int,
+        hidden_dim: int = 128,
+        keep_phantom_samples: bool = False,
+    ) -> None:
         super().__init__()
         self.obs_dim = obs_dim
         self.hidden_dim = hidden_dim
+        self.keep_phantom_samples = keep_phantom_samples
         self.feature_net = nn.Sequential(
             layer_init(nn.Linear(obs_dim, hidden_dim)),
             nn.Tanh(),
@@ -168,13 +229,23 @@ class RecurrentActor(nn.Module):
         new_hidden: list[torch.Tensor] = []
 
         for h, d in zip(hidden, done):
-            h_step, lstm_state = self.lstm(
-                h.unsqueeze(0),
-                (
+            if self.keep_phantom_samples:
+                h_step, lstm_state = self.lstm(
+                    h.unsqueeze(0),
+                    (
+                        (1.0 - d).view(1, -1, 1) * lstm_state[0],
+                        (1.0 - d).view(1, -1, 1) * lstm_state[1],
+                    ),
+                )
+            else:
+                h_step, lstm_state = self.lstm(
+                    h.unsqueeze(0),
+                    lstm_state,
+                )
+                lstm_state = (
                     (1.0 - d).view(1, -1, 1) * lstm_state[0],
                     (1.0 - d).view(1, -1, 1) * lstm_state[1],
-                ),
-            )
+                )
             new_hidden.append(h_step)
 
         flat_hidden = torch.flatten(torch.cat(new_hidden), 0, 1)
@@ -198,10 +269,16 @@ class RecurrentActor(nn.Module):
 class RecurrentCritic(nn.Module):
     """Recurrent value network with independent LSTM memory for state value estimation."""
 
-    def __init__(self, obs_dim: int, hidden_dim: int = 128) -> None:
+    def __init__(
+        self,
+        obs_dim: int,
+        hidden_dim: int = 128,
+        keep_phantom_samples: bool = False,
+    ) -> None:
         super().__init__()
         self.obs_dim = obs_dim
         self.hidden_dim = hidden_dim
+        self.keep_phantom_samples = keep_phantom_samples
         self.feature_net = nn.Sequential(
             layer_init(nn.Linear(obs_dim, hidden_dim)),
             nn.Tanh(),
@@ -224,13 +301,23 @@ class RecurrentCritic(nn.Module):
         new_hidden: list[torch.Tensor] = []
 
         for h, d in zip(hidden, done):
-            h_step, lstm_state = self.lstm(
-                h.unsqueeze(0),
-                (
+            if self.keep_phantom_samples:
+                h_step, lstm_state = self.lstm(
+                    h.unsqueeze(0),
+                    (
+                        (1.0 - d).view(1, -1, 1) * lstm_state[0],
+                        (1.0 - d).view(1, -1, 1) * lstm_state[1],
+                    ),
+                )
+            else:
+                h_step, lstm_state = self.lstm(
+                    h.unsqueeze(0),
+                    lstm_state,
+                )
+                lstm_state = (
                     (1.0 - d).view(1, -1, 1) * lstm_state[0],
                     (1.0 - d).view(1, -1, 1) * lstm_state[1],
-                ),
-            )
+                )
             new_hidden.append(h_step)
 
         flat_hidden = torch.flatten(torch.cat(new_hidden), 0, 1)
@@ -241,13 +328,24 @@ class RecurrentCritic(nn.Module):
 class RecurrentAgent(nn.Module):
     """Full decoupled Actor-Critic Agent with recurrent LSTM backbones."""
 
-    def __init__(self, obs_dim: int, action_dim: int, hidden_dim: int = 128) -> None:
+    def __init__(
+        self,
+        obs_dim: int,
+        action_dim: int,
+        hidden_dim: int = 128,
+        keep_phantom_samples: bool = False,
+    ) -> None:
         super().__init__()
         self.obs_dim = obs_dim
         self.action_dim = action_dim
         self.hidden_dim = hidden_dim
-        self.actor = RecurrentActor(obs_dim, action_dim, hidden_dim)
-        self.critic = RecurrentCritic(obs_dim, hidden_dim)
+        self.keep_phantom_samples = keep_phantom_samples
+        self.actor = RecurrentActor(
+            obs_dim, action_dim, hidden_dim, keep_phantom_samples=keep_phantom_samples
+        )
+        self.critic = RecurrentCritic(
+            obs_dim, hidden_dim, keep_phantom_samples=keep_phantom_samples
+        )
 
     def get_initial_states(
         self, batch_size: int, device: torch.device
@@ -372,9 +470,13 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
     obs_dim = int(np.prod(obs_shape))
     action_dim = envs.single_action_space.n
 
-    agent = RecurrentAgent(obs_dim=obs_dim, action_dim=action_dim, hidden_dim=128).to(
-        device
-    )
+    keep_phantom_samples = getattr(args, "keep_phantom_samples", False)
+    agent = RecurrentAgent(
+        obs_dim=obs_dim,
+        action_dim=action_dim,
+        hidden_dim=128,
+        keep_phantom_samples=keep_phantom_samples,
+    ).to(device)
 
     # Decoupled optimizers for actor and critic
     optimizer_actor = optim.Adam(
@@ -645,17 +747,37 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
 
                 mb_advantages = b_advantages[mb_inds]
                 if args.norm_adv:
-                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (
-                        mb_advantages.std() + 1e-8
-                    )
+                    if keep_phantom_samples:
+                        mb_advantages = (mb_advantages - mb_advantages.mean()) / (
+                            mb_advantages.std() + 1e-8
+                        )
+                    else:
+                        valid_mask = (1.0 - b_dones[mb_inds]).bool()
+                        mb_advantages = (mb_advantages - mb_advantages[valid_mask].mean()) / (
+                            mb_advantages[valid_mask].std() + 1e-8
+                        )
+
+                if keep_phantom_samples:
+                    valid_denom = float(ratio.numel())
+                    valid_weight = torch.ones_like(ratio)
+                else:
+                    valid_weight = 1.0 - b_dones[mb_inds]
+                    valid_denom = valid_weight.sum().clamp(min=1.0)
+
+                with torch.no_grad():
+                    approx_kl = (((ratio - 1.0) - logratio) * valid_weight).sum() / valid_denom
+                    clipfrac = (
+                        ((ratio - 1.0).abs() > args.clip_coef).float() * valid_weight
+                    ).sum() / valid_denom
 
                 # Policy Loss
                 pg_loss1 = -mb_advantages * ratio
                 pg_loss2 = -mb_advantages * torch.clamp(
                     ratio, 1.0 - args.clip_coef, 1.0 + args.clip_coef
                 )
-                pg_loss = torch.max(pg_loss1, pg_loss2).mean()
-                entropy_loss = entropy.mean()
+                pg_loss_unreduced = torch.max(pg_loss1, pg_loss2)
+                pg_loss = (pg_loss_unreduced * valid_weight).sum() / valid_denom
+                entropy_loss = (entropy * valid_weight).sum() / valid_denom
                 actor_loss = pg_loss - args.ent_coef * entropy_loss
 
                 # Value Loss
@@ -668,10 +790,10 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
                         args.clip_coef,
                     )
                     v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
-                    v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
-                    v_loss = 0.5 * v_loss_max.mean()
+                    v_loss_unreduced = torch.max(v_loss_unclipped, v_loss_clipped)
                 else:
-                    v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
+                    v_loss_unreduced = (newvalue - b_returns[mb_inds]) ** 2
+                v_loss = 0.5 * (v_loss_unreduced * valid_weight).sum() / valid_denom
 
                 # Decoupled backward pass & independent gradient clipping
                 optimizer_actor.zero_grad()
@@ -684,8 +806,13 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
                 nn.utils.clip_grad_norm_(agent.critic.parameters(), args.max_grad_norm)
                 optimizer_critic.step()
 
-        y_pred = b_values.cpu().numpy()
-        y_true = b_returns.cpu().numpy()
+        if keep_phantom_samples:
+            y_pred = b_values.cpu().numpy()
+            y_true = b_returns.cpu().numpy()
+        else:
+            valid_np = (b_dones.cpu().numpy() == 0)
+            y_pred = b_values.cpu().numpy()[valid_np]
+            y_true = b_returns.cpu().numpy()[valid_np]
         var_y = np.var(y_true)
         explained_var = (
             np.nan if var_y == 0 else 1.0 - np.var(y_true - y_pred) / var_y
@@ -779,12 +906,43 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
     return model_path
 
 
+ENV_PROFILES: dict[str, dict[str, Any]] = {
+    "legacy_50": {
+        "observation": {"vehicles_count": 10},
+        "vehicles_count": 10,
+        "vehicles_density": 1.0,
+        "duration": 40,
+    },
+    "current_75": {
+        "observation": {"vehicles_count": 15},
+        "vehicles_count": 14,
+        "vehicles_density": 1.4,
+        "duration": 100,
+    },
+}
+
+PROFILE_ALIASES: dict[str, str] = {
+    "50": "legacy_50",
+    "50-dim": "legacy_50",
+    "50_dim": "legacy_50",
+    "legacy": "legacy_50",
+    "legacy_50": "legacy_50",
+    "75": "current_75",
+    "75-dim": "current_75",
+    "75_dim": "current_75",
+    "current": "current_75",
+    "current_75": "current_75",
+    "benchmark": "current_75",
+}
+
+
 def evaluate_ppo_lstm_policy(
     model_path: str,
     scenario: str = "highway",
     tier: str = "full_adas",
     episodes: int = 30,
     seed_start: int = 2000,
+    profile: str | None = None,
 ) -> dict[str, Any]:
     """Evaluate trained Recurrent PPO on deterministic benchmark test seeds."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -806,29 +964,49 @@ def evaluate_ppo_lstm_policy(
     else:
         ckpt_obs_dim = 75
 
-    env_overrides: dict[str, Any] = {}
-    if ckpt_obs_dim == 50:
-        env_overrides["observation"] = {"vehicles_count": 10}
-        env_overrides["vehicles_count"] = 10
-        env_overrides["vehicles_density"] = 1.0
-        env_overrides["duration"] = 40
-        obs_dim = 50
-    elif ckpt_obs_dim == 75:
-        env_overrides["observation"] = {"vehicles_count": 15}
-        env_overrides["vehicles_count"] = 14
-        env_overrides["vehicles_density"] = 1.4
-        env_overrides["duration"] = 100
-        obs_dim = 75
+    resolved_profile: str | None = None
+    if profile is not None:
+        resolved_profile = PROFILE_ALIASES.get(str(profile).lower(), str(profile))
     else:
-        dummy_env = env_config.make_env(scenario=scenario, tier=tier, seed=0)
-        obs_dim = int(np.prod(dummy_env.observation_space.shape))
-        dummy_env.close()
+        manifest_path = "eval_out/checkpoint_profiles.json"
+        if os.path.exists(manifest_path):
+            try:
+                with open(manifest_path) as mf:
+                    manifest_data = json.load(mf)
+                basename = os.path.basename(model_path)
+                entry = (
+                    manifest_data.get(model_path)
+                    or manifest_data.get(basename)
+                    or manifest_data.get(f"models/{basename}")
+                )
+                if entry and "env_profile" in entry and "profile_name" in entry["env_profile"]:
+                    resolved_profile = entry["env_profile"]["profile_name"]
+            except Exception:
+                pass
+
+        if resolved_profile is None:
+            if tier == "front_only":
+                resolved_profile = "legacy_50"
+            else:
+                resolved_profile = "current_75"
+
+    resolved_profile = PROFILE_ALIASES.get(resolved_profile.lower(), resolved_profile)
+    if resolved_profile not in ENV_PROFILES:
+        raise ValueError(f"Unknown environment profile: '{resolved_profile}'")
+
+    env_overrides = dict(ENV_PROFILES[resolved_profile])
 
     dummy_env = env_config.make_env(
         scenario=scenario, tier=tier, seed=0, **env_overrides
     )
+    obs_dim = int(np.prod(dummy_env.observation_space.shape))
     action_dim = dummy_env.action_space.n
     dummy_env.close()
+
+    if ckpt_obs_dim != obs_dim:
+        raise ValueError(
+            f"Checkpoint input dimension {ckpt_obs_dim} does not match environment observation dimension {obs_dim} for profile '{resolved_profile}'"
+        )
 
     agent = RecurrentAgent(obs_dim=obs_dim, action_dim=action_dim, hidden_dim=128).to(
         device
@@ -917,6 +1095,8 @@ def evaluate_ppo_lstm_policy(
         "scenario": scenario,
         "tier": tier,
         "model_path": model_path,
+        "resolved_profile": resolved_profile,
+        "profile": resolved_profile,
         "episodes": episodes,
         "crashes": crashes,
         "crash_fraction": f"{crashes}/{episodes}",
@@ -941,6 +1121,23 @@ def evaluate_ppo_lstm_policy(
 def main() -> None:
     """Execute complete recurrent PPO training and evaluation benchmark."""
     args = parse_args()
+
+    if getattr(args, "eval_only", False):
+        model_path = args.model_path or f"models/ppo_lstm_{args.scenario}_{args.tier}_seed{args.seed}.pt"
+        eval_res = evaluate_ppo_lstm_policy(
+            model_path=model_path,
+            scenario=args.scenario,
+            tier=args.tier,
+            episodes=args.eval_episodes,
+            seed_start=args.eval_seed_start,
+            profile=getattr(args, "profile", None),
+        )
+        if getattr(args, "eval_results_path", None):
+            os.makedirs(os.path.dirname(os.path.abspath(args.eval_results_path)), exist_ok=True)
+            with open(args.eval_results_path, "w") as f:
+                json.dump(eval_res, f, indent=2)
+        return
+
     tiers = ["full_adas", "front_only"] if args.tier == "all" else [args.tier]
     benchmark_results: dict[str, Any] = {}
 
@@ -957,6 +1154,7 @@ def main() -> None:
             tier=tier,
             episodes=30,
             seed_start=2000,
+            profile=getattr(args, "profile", None),
         )
         eval_res["train_duration_sec"] = train_time
         eval_res["policy"] = "PPO + LSTM"
@@ -964,6 +1162,11 @@ def main() -> None:
 
     with open("ppo_lstm_results.json", "w") as f:
         json.dump(benchmark_results, f, indent=2)
+
+    if getattr(args, "eval_results_path", None):
+        os.makedirs(os.path.dirname(os.path.abspath(args.eval_results_path)), exist_ok=True)
+        with open(args.eval_results_path, "w") as f:
+            json.dump(benchmark_results, f, indent=2)
 
     print("\n" + "=" * 80)
     print("RECURRENT PPO (LSTM) BENCHMARK COMPLETE")

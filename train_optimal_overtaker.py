@@ -609,6 +609,8 @@ def train(args: argparse.Namespace) -> str:
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
         b_masks = masks.reshape((-1, action_dim))
+        b_dones = dones.reshape(-1)
+        b_valid = torch.ones_like(b_dones) if getattr(args, "keep_phantom_samples", False) else (1.0 - b_dones)
 
         # Cost GAE and PID Controller update for Lagrangian mode
         if constrained_mode:
@@ -680,15 +682,29 @@ def train(args: argparse.Namespace) -> str:
             b_cost_values = cost_values.reshape(-1)
 
             # Separately normalize reward and cost advantages before combining (unit scale)
-            b_r_norm = (b_advantages - b_advantages.mean()) / (b_advantages.std() + 1e-8)
-            b_c_norm = (b_cost_advantages - b_cost_advantages.mean()) / (b_cost_advantages.std() + 1e-8)
+            if getattr(args, "keep_phantom_samples", False):
+                b_r_norm = (b_advantages - b_advantages.mean()) / (b_advantages.std() + 1e-8)
+                b_c_norm = (b_cost_advantages - b_cost_advantages.mean()) / (b_cost_advantages.std() + 1e-8)
+            else:
+                valid_sum = b_valid.sum() + 1e-8
+                r_mean = (b_valid * b_advantages).sum() / valid_sum
+                r_var = (b_valid * (b_advantages - r_mean) ** 2).sum() / valid_sum
+                b_r_norm = (b_advantages - r_mean) / (torch.sqrt(r_var) + 1e-8)
+                c_mean = (b_valid * b_cost_advantages).sum() / valid_sum
+                c_var = (b_valid * (b_cost_advantages - c_mean) ** 2).sum() / valid_sum
+                b_c_norm = (b_cost_advantages - c_mean) / (torch.sqrt(c_var) + 1e-8)
             b_adj_advantages = b_r_norm - lagrange_mult * b_c_norm
             # Do NOT re-normalize b_adj_advantages: both streams are already unit-scale
             b_norm_advantages = b_adj_advantages
 
             # Track relative magnitudes of competing terms
-            mag_reward = float(torch.abs(b_r_norm).mean().item())
-            mag_cost = float(torch.abs(lagrange_mult * b_c_norm).mean().item())
+            if getattr(args, "keep_phantom_samples", False):
+                mag_reward = float(torch.abs(b_r_norm).mean().item())
+                mag_cost = float(torch.abs(lagrange_mult * b_c_norm).mean().item())
+            else:
+                valid_sum = b_valid.sum() + 1e-8
+                mag_reward = float(((b_valid * torch.abs(b_r_norm)).sum() / valid_sum).item())
+                mag_cost = float(((b_valid * torch.abs(lagrange_mult * b_c_norm)).sum() / valid_sum).item())
             adv_ratio = float(mag_cost / (mag_reward + 1e-8))
 
             writer.add_scalar("pid/mag_reward_adv", mag_reward, global_step)
@@ -721,26 +737,34 @@ def train(args: argparse.Namespace) -> str:
                 logratio = newlogprob - b_logprobs[mb_inds]
                 ratio = logratio.exp()
 
+                mb_valid = b_valid[mb_inds]
+                mb_valid_sum = mb_valid.sum() + 1e-8
+
                 with torch.no_grad():
-                    approx_kl = ((ratio - 1.0) - logratio).mean()
+                    approx_kl = ((mb_valid * ((ratio - 1.0) - logratio)).sum() / mb_valid_sum)
                     clipfracs.append(
-                        ((ratio - 1.0).abs() > args.clip_coef).float().mean().item()
+                        (((mb_valid * ((ratio - 1.0).abs() > args.clip_coef).float()).sum() / mb_valid_sum)).item()
                     )
 
                 if constrained_mode and b_norm_advantages is not None:
                     mb_advantages = b_norm_advantages[mb_inds]
                 else:
                     mb_advantages = b_advantages[mb_inds]
-                    mb_advantages = (
-                        mb_advantages - mb_advantages.mean()
-                    ) / (mb_advantages.std() + 1e-8)
+                    if getattr(args, "keep_phantom_samples", False):
+                        mb_advantages = (
+                            mb_advantages - mb_advantages.mean()
+                        ) / (mb_advantages.std() + 1e-8)
+                    else:
+                        mb_adv_mean = (mb_valid * mb_advantages).sum() / mb_valid_sum
+                        mb_adv_var = (mb_valid * (mb_advantages - mb_adv_mean) ** 2).sum() / mb_valid_sum
+                        mb_advantages = (mb_advantages - mb_adv_mean) / (torch.sqrt(mb_adv_var) + 1e-8)
 
                 # Policy loss
                 pg_loss1 = -mb_advantages * ratio
                 pg_loss2 = -mb_advantages * torch.clamp(
                     ratio, 1.0 - args.clip_coef, 1.0 + args.clip_coef
                 )
-                pg_loss = torch.max(pg_loss1, pg_loss2).mean()
+                pg_loss = (mb_valid * torch.max(pg_loss1, pg_loss2)).sum() / mb_valid_sum
 
                 # Value loss (clipped)
                 newvalue = newvalue.view(-1)
@@ -751,9 +775,9 @@ def train(args: argparse.Namespace) -> str:
                     args.clip_coef,
                 )
                 v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
-                v_loss = 0.5 * torch.max(v_loss_unclipped, v_loss_clipped).mean()
+                v_loss = 0.5 * (mb_valid * torch.max(v_loss_unclipped, v_loss_clipped)).sum() / mb_valid_sum
 
-                entropy_loss = entropy.mean()
+                entropy_loss = (mb_valid * entropy).sum() / mb_valid_sum
                 loss = pg_loss - ent_now * entropy_loss + args.vf_coef * v_loss
 
                 # Value loss for Cost critic
@@ -766,7 +790,7 @@ def train(args: argparse.Namespace) -> str:
                         args.clip_coef,
                     )
                     v_cost_loss_clipped = (v_cost_clipped - b_cost_returns[mb_inds]) ** 2
-                    v_cost_loss = 0.5 * torch.max(v_cost_unclipped, v_cost_loss_clipped).mean()
+                    v_cost_loss = 0.5 * (mb_valid * torch.max(v_cost_unclipped, v_cost_loss_clipped)).sum() / mb_valid_sum
                     loss = loss + getattr(args, "vf_cost_coef", 0.5) * v_cost_loss
                 else:
                     v_cost_loss = None
@@ -1221,6 +1245,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
+    )
+    # Phantom Sample Masking
+    parser.add_argument(
+        "--keep-phantom-samples",
+        action="store_true",
+        default=False,
+        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics (legacy behavior).",
     )
 
     # Checkpointing and Resuming (D1-1)

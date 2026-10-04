@@ -1,0 +1,99 @@
+{
+  "profile": "legacy",
+  "profile_parameters": {
+    "observation": {
+      "vehicles_count": 10
+    },
+    "vehicles_count": 10,
+    "vehicles_density": 1.0,
+    "duration": 40,
+    "step_cap": 200,
+    "policy_frequency": 5
+  },
+  "git_commit": "bebdb357e4498d7554bbe9ea2458bc498b89c1aa",
+  "package_versions": {
+    "highway_env": "1.12.1",
+    "gymnasium": "1.3.0",
+    "torch": "2.14.0+cu130",
+    "numpy": "2.5.2"
+  },
+  "seeds": {
+    "start": 2000,
+    "end": 2099,
+    "count": 100
+  },
+  "results": {
+    "full_adas_idm_only": {
+      "policy": "IDM Only (Lane-Keeping)",
+      "tier": "full_adas",
+      "controller": "idm_only",
+      "profile": "legacy",
+      "episodes": 100,
+      "crashes": 0,
+      "crash_fraction": "0/100",
+      "crash_rate": 0.0,
+      "ci_95": [
+        0.0,
+        0.03621669264517641
+      ],
+      "mean_duration": 200.0,
+      "std_duration": 0.0,
+      "mean_speed_kmh": 81.2221310067296,
+      "mean_lane_changes": 0.0
+    },
+    "full_adas_idm_mobil": {
+      "policy": "IDM + MOBIL (Overtaking)",
+      "tier": "full_adas",
+      "controller": "idm_mobil",
+      "profile": "legacy",
+      "episodes": 100,
+      "crashes": 10,
+      "crash_fraction": "10/100",
+      "crash_rate": 10.0,
+      "ci_95": [
+        0.04900468922148595,
+        0.17622259774002266
+      ],
+      "mean_duration": 187.5,
+      "std_duration": 42.685477624128794,
+      "mean_speed_kmh": 82.39746813744785,
+      "mean_lane_changes": 5.93
+    },
+    "front_only_idm_only": {
+      "policy": "IDM Only (Lane-Keeping)",
+      "tier": "front_only",
+      "controller": "idm_only",
+      "profile": "legacy",
+      "episodes": 100,
+      "crashes": 0,
+      "crash_fraction": "0/100",
+      "crash_rate": 0.0,
+      "ci_95": [
+        0.0,
+        0.03621669264517641
+      ],
+      "mean_duration": 200.0,
+      "std_duration": 0.0,
+      "mean_speed_kmh": 81.2221310067296,
+      "mean_lane_changes": 0.0
+    },
+    "front_only_idm_mobil": {
+      "policy": "IDM + MOBIL (Overtaking)",
+      "tier": "front_only",
+      "controller": "idm_mobil",
+      "profile": "legacy",
+      "episodes": 100,
+      "crashes": 54,
+      "crash_fraction": "54/100",
+      "crash_rate": 54.0,
+      "ci_95": [
+        0.4374115798664712,
+        0.640156647020588
+      ],
+      "mean_duration": 134.34,
+      "std_duration": 69.70914143783439,
+      "mean_speed_kmh": 83.65582816349723,
+      "mean_lane_changes": 6.41
+    }
+  }
+}

@@ -5,6 +5,7 @@ using Gymnasium SyncVectorEnv and tier-masked observations from env_config.
 """
 
 import argparse
+import json
 import math
 import os
 import random
@@ -388,6 +389,8 @@ def train_ppo(args: argparse.Namespace) -> str:
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
         b_masks = masks.reshape((-1, action_dim))
+        b_dones = dones.reshape(-1)
+        b_valid = torch.ones_like(b_dones) if getattr(args, "keep_phantom_samples", False) else (1.0 - b_dones)
 
         # Policy and Value Network Updates
         b_inds = np.arange(batch_size)
@@ -407,24 +410,32 @@ def train_ppo(args: argparse.Namespace) -> str:
                 logratio = newlogprob - b_logprobs[mb_inds]
                 ratio = logratio.exp()
 
+                mb_valid = b_valid[mb_inds]
+                mb_valid_sum = mb_valid.sum() + 1e-8
+
                 with torch.no_grad():
-                    approx_kl = ((ratio - 1.0) - logratio).mean()
+                    approx_kl = ((mb_valid * ((ratio - 1.0) - logratio)).sum() / mb_valid_sum)
                     clipfracs.append(
-                        ((ratio - 1.0).abs() > args.clip_coef).float().mean().item()
+                        (((mb_valid * ((ratio - 1.0).abs() > args.clip_coef).float()).sum() / mb_valid_sum)).item()
                     )
 
                 mb_advantages = b_advantages[mb_inds]
                 if args.norm_adv:
-                    mb_advantages = (
-                        mb_advantages - mb_advantages.mean()
-                    ) / (mb_advantages.std() + 1e-8)
+                    if getattr(args, "keep_phantom_samples", False):
+                        mb_advantages = (
+                            mb_advantages - mb_advantages.mean()
+                        ) / (mb_advantages.std() + 1e-8)
+                    else:
+                        mb_adv_mean = (mb_valid * mb_advantages).sum() / mb_valid_sum
+                        mb_adv_var = (mb_valid * (mb_advantages - mb_adv_mean) ** 2).sum() / mb_valid_sum
+                        mb_advantages = (mb_advantages - mb_adv_mean) / (torch.sqrt(mb_adv_var) + 1e-8)
 
                 # Policy surrogate loss
                 pg_loss1 = -mb_advantages * ratio
                 pg_loss2 = -mb_advantages * torch.clamp(
                     ratio, 1.0 - args.clip_coef, 1.0 + args.clip_coef
                 )
-                pg_loss = torch.max(pg_loss1, pg_loss2).mean()
+                pg_loss = (mb_valid * torch.max(pg_loss1, pg_loss2)).sum() / mb_valid_sum
 
                 # Value loss
                 newvalue = newvalue.view(-1)
@@ -437,11 +448,11 @@ def train_ppo(args: argparse.Namespace) -> str:
                     )
                     v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
                     v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
-                    v_loss = 0.5 * v_loss_max.mean()
+                    v_loss = 0.5 * (mb_valid * v_loss_max).sum() / mb_valid_sum
                 else:
-                    v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
+                    v_loss = 0.5 * (mb_valid * ((newvalue - b_returns[mb_inds]) ** 2)).sum() / mb_valid_sum
 
-                entropy_loss = entropy.mean()
+                entropy_loss = (mb_valid * entropy).sum() / mb_valid_sum
                 actor_loss = pg_loss - args.ent_coef * entropy_loss
                 opt_actor.zero_grad()
                 actor_loss.backward()
@@ -562,6 +573,36 @@ def train_ppo(args: argparse.Namespace) -> str:
     return model_path
 
 
+ENV_PROFILES: dict[str, dict[str, Any]] = {
+    "legacy_50": {
+        "observation": {"vehicles_count": 10},
+        "vehicles_count": 10,
+        "vehicles_density": 1.0,
+        "duration": 40,
+    },
+    "current_75": {
+        "observation": {"vehicles_count": 15},
+        "vehicles_count": 14,
+        "vehicles_density": 1.4,
+        "duration": 100,
+    },
+}
+
+PROFILE_ALIASES: dict[str, str] = {
+    "50": "legacy_50",
+    "50-dim": "legacy_50",
+    "50_dim": "legacy_50",
+    "legacy": "legacy_50",
+    "legacy_50": "legacy_50",
+    "75": "current_75",
+    "75-dim": "current_75",
+    "75_dim": "current_75",
+    "current": "current_75",
+    "current_75": "current_75",
+    "benchmark": "current_75",
+}
+
+
 def evaluate_ppo_policy(
     model_path: str,
     scenario: str = "highway",
@@ -570,6 +611,7 @@ def evaluate_ppo_policy(
     seed_start: int = 2000,
     device: str = "cpu",
     deterministic: bool = True,
+    profile: str | None = None,
 ) -> dict[str, Any]:
     """Evaluate a trained PPO policy across deterministic test seeds.
 
@@ -581,6 +623,7 @@ def evaluate_ppo_policy(
         seed_start: Initial random seed.
         device: PyTorch device ('cpu' or 'cuda').
         deterministic: If True, actions are selected greedily (argmax).
+        profile: Optional environment profile name ('legacy_50', 'current_75').
 
     Returns:
         Dictionary of summary evaluation statistics.
@@ -601,23 +644,37 @@ def evaluate_ppo_policy(
     else:
         ckpt_obs_dim = 75
 
-    env_overrides: dict[str, Any] = {}
-    if ckpt_obs_dim == 50:
-        env_overrides["observation"] = {"vehicles_count": 10}
-        env_overrides["vehicles_count"] = 10
-        env_overrides["vehicles_density"] = 1.0
-        env_overrides["duration"] = 40
-        obs_dim = 50
-    elif ckpt_obs_dim == 75:
-        env_overrides["observation"] = {"vehicles_count": 15}
-        env_overrides["vehicles_count"] = 14
-        env_overrides["vehicles_density"] = 1.4
-        env_overrides["duration"] = 100
-        obs_dim = 75
+    resolved_profile: str | None = None
+    if profile is not None:
+        resolved_profile = PROFILE_ALIASES.get(str(profile).lower(), str(profile))
     else:
-        dummy_env = env_config.make_env(scenario=scenario, tier=tier, seed=0)
-        obs_dim = int(np.prod(dummy_env.observation_space.shape))
-        dummy_env.close()
+        manifest_path = "eval_out/checkpoint_profiles.json"
+        if os.path.exists(manifest_path):
+            try:
+                with open(manifest_path) as mf:
+                    manifest_data = json.load(mf)
+                basename = os.path.basename(model_path)
+                entry = (
+                    manifest_data.get(model_path)
+                    or manifest_data.get(basename)
+                    or manifest_data.get(f"models/{basename}")
+                )
+                if entry and "env_profile" in entry and "profile_name" in entry["env_profile"]:
+                    resolved_profile = entry["env_profile"]["profile_name"]
+            except Exception:
+                pass
+
+        if resolved_profile is None:
+            if tier == "front_only":
+                resolved_profile = "legacy_50"
+            else:
+                resolved_profile = "current_75"
+
+    resolved_profile = PROFILE_ALIASES.get(resolved_profile.lower(), resolved_profile)
+    if resolved_profile not in ENV_PROFILES:
+        raise ValueError(f"Unknown environment profile: '{resolved_profile}'")
+
+    env_overrides = dict(ENV_PROFILES[resolved_profile])
 
     env = env_config.make_env(
         scenario=scenario,
@@ -629,6 +686,12 @@ def evaluate_ppo_policy(
     obs_shape = env.observation_space.shape
     obs_dim = int(np.prod(obs_shape))
     action_dim = int(env.action_space.n)
+
+    if ckpt_obs_dim != obs_dim:
+        env.close()
+        raise ValueError(
+            f"Checkpoint input dimension {ckpt_obs_dim} does not match environment observation dimension {obs_dim} for profile '{resolved_profile}'"
+        )
 
     agent = Agent(obs_dim=obs_dim, action_dim=action_dim).to(device)
     agent.load_state_dict(state_dict)
@@ -710,6 +773,8 @@ def evaluate_ppo_policy(
         "scenario": scenario,
         "tier": tier,
         "model_path": model_path,
+        "resolved_profile": resolved_profile,
+        "profile": resolved_profile,
         "episodes": episodes,
         "crashes": crashes,
         "crash_fraction": f"{crashes}/{episodes}",
@@ -785,6 +850,13 @@ def parse_args() -> argparse.Namespace:
         default=False,
         help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
     )
+    # Phantom Sample Masking
+    parser.add_argument(
+        "--keep-phantom-samples",
+        action="store_true",
+        default=False,
+        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics (legacy behavior).",
+    )
 
     # Checkpointing and Resuming (D1-1)
     parser.add_argument(
@@ -818,6 +890,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-episodes", type=int, default=30)
     parser.add_argument("--eval-seed-start", type=int, default=2000)
     parser.add_argument("--eval-deterministic", action="store_true", default=True)
+    parser.add_argument(
+        "--profile",
+        type=str,
+        default=None,
+        help="Environment profile name (e.g. legacy_50, current_75).",
+    )
+    parser.add_argument(
+        "--eval-results-path",
+        type=str,
+        default=None,
+        help="Path to save evaluation results JSON.",
+    )
 
     return parser.parse_args()
 
@@ -831,7 +915,7 @@ def main() -> None:
             args.model_path = (
                 f"models/ppo_{args.scenario}_{args.tier}_seed{args.seed}.pt"
             )
-        evaluate_ppo_policy(
+        eval_res = evaluate_ppo_policy(
             model_path=args.model_path,
             scenario=args.scenario,
             tier=args.tier,
@@ -839,10 +923,15 @@ def main() -> None:
             seed_start=args.eval_seed_start,
             device="cuda" if torch.cuda.is_available() and args.cuda else "cpu",
             deterministic=args.eval_deterministic,
+            profile=getattr(args, "profile", None),
         )
+        if getattr(args, "eval_results_path", None):
+            os.makedirs(os.path.dirname(os.path.abspath(args.eval_results_path)), exist_ok=True)
+            with open(args.eval_results_path, "w") as f:
+                json.dump(eval_res, f, indent=2)
     else:
         saved_model_path = train_ppo(args)
-        evaluate_ppo_policy(
+        eval_res = evaluate_ppo_policy(
             model_path=saved_model_path,
             scenario=args.scenario,
             tier=args.tier,
@@ -850,7 +939,12 @@ def main() -> None:
             seed_start=args.eval_seed_start,
             device="cuda" if torch.cuda.is_available() and args.cuda else "cpu",
             deterministic=args.eval_deterministic,
+            profile=getattr(args, "profile", None),
         )
+        if getattr(args, "eval_results_path", None):
+            os.makedirs(os.path.dirname(os.path.abspath(args.eval_results_path)), exist_ok=True)
+            with open(args.eval_results_path, "w") as f:
+                json.dump(eval_res, f, indent=2)
 
 
 if __name__ == "__main__":

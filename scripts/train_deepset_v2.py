@@ -405,6 +405,8 @@ def train_deepset(args: argparse.Namespace) -> str:
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
         b_masks = masks.reshape((-1, action_dim))
+        b_dones = dones.reshape(-1)
+        b_valid = torch.ones_like(b_dones) if getattr(args, "keep_phantom_samples", False) else (1.0 - b_dones)
 
         # PPO Update
         agent.train()
@@ -429,20 +431,28 @@ def train_deepset(args: argparse.Namespace) -> str:
                 logratio = newlogprob - b_logprobs[mb_inds]
                 ratio = logratio.exp()
 
+                mb_valid = b_valid[mb_inds]
+                mb_valid_sum = mb_valid.sum() + 1e-8
+
                 with torch.no_grad():
-                    approx_kl = ((ratio - 1.0) - logratio).mean()
+                    approx_kl = ((mb_valid * ((ratio - 1.0) - logratio)).sum() / mb_valid_sum)
                     approx_kls.append(approx_kl.item())
-                    clipfrac = ((ratio - 1.0).abs() > args.clip_coef).float().mean().item()
+                    clipfrac = (((mb_valid * ((ratio - 1.0).abs() > args.clip_coef).float()).sum() / mb_valid_sum)).item()
                     clipfracs.append(clipfrac)
 
                 # Advantage normalization per minibatch
                 mb_advantages = b_advantages[mb_inds]
-                mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+                if getattr(args, "keep_phantom_samples", False):
+                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+                else:
+                    mb_adv_mean = (mb_valid * mb_advantages).sum() / mb_valid_sum
+                    mb_adv_var = (mb_valid * (mb_advantages - mb_adv_mean) ** 2).sum() / mb_valid_sum
+                    mb_advantages = (mb_advantages - mb_adv_mean) / (torch.sqrt(mb_adv_var) + 1e-8)
 
                 # Policy loss
                 pg_loss1 = -mb_advantages * ratio
                 pg_loss2 = -mb_advantages * torch.clamp(ratio, 1.0 - args.clip_coef, 1.0 + args.clip_coef)
-                pg_loss = torch.max(pg_loss1, pg_loss2).mean()
+                pg_loss = (mb_valid * torch.max(pg_loss1, pg_loss2)).sum() / mb_valid_sum
 
                 # Value loss (clipped)
                 newvalue = newvalue.view(-1)
@@ -451,9 +461,9 @@ def train_deepset(args: argparse.Namespace) -> str:
                     newvalue - b_values[mb_inds], -args.clip_coef, args.clip_coef
                 )
                 v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
-                v_loss = 0.5 * torch.max(v_loss_unclipped, v_loss_clipped).mean()
+                v_loss = 0.5 * (mb_valid * torch.max(v_loss_unclipped, v_loss_clipped)).sum() / mb_valid_sum
 
-                entropy_loss = entropy.mean()
+                entropy_loss = (mb_valid * entropy).sum() / mb_valid_sum
                 loss = pg_loss - ent_now * entropy_loss + args.vf_coef * v_loss
 
                 assert not torch.isnan(loss), f"Encountered NaN loss at global_step={global_step}"
@@ -595,6 +605,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--overtake-bonus", type=float, default=1.0)
     parser.add_argument("--target-speeds", type=float, nargs="+", default=None,
                         help="Override DiscreteMetaAction target speeds, e.g. --target-speeds 10 15 20 25 30")
+    # Phantom Sample Masking
+    parser.add_argument(
+        "--keep-phantom-samples",
+        action="store_true",
+        default=False,
+        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics (legacy behavior).",
+    )
 
     # Output / Validation
     parser.add_argument("--output-dir", type=str, default="scratch/deepset_v2")

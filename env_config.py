@@ -967,12 +967,20 @@ def make_env(
         )
 
     env_config = copy.deepcopy(DEFAULT_ENV_CONFIG)
-    env_config.update(SCENARIO_CONFIGS[scenario])
+    env_config.update(copy.deepcopy(SCENARIO_CONFIGS[scenario]))
 
     if "observation" in overrides and isinstance(overrides["observation"], dict):
         env_config["observation"].update(overrides.pop("observation"))
 
     env_config.update(overrides)
+
+    if tier != "full_adas" and env_config.get("observation", {}).get("absolute", False):
+        raise ValueError(
+            f"Scenario '{scenario}' uses absolute coordinates "
+            f"(observation.absolute=True), which is incompatible with "
+            f"tier '{tier}'. Tier filters assume ego-relative coordinates. "
+            f"Only tier='full_adas' is supported for this scenario."
+        )
 
     env = gym.make(
         SCENARIO_ENV_IDS[scenario],
@@ -1157,7 +1165,11 @@ def make_continuous_env(
     )
 
     if tier != "full_adas":
-        base_env = SensorTierWrapper(base_env, tier=tier)
+        raise ValueError(
+            f"make_continuous_env does not support tier '{tier}': "
+            f"TacticalLaneObservationWrapper rebuilds observations from "
+            f"ground truth, making tier masking ineffective."
+        )
 
     # Wrap with 30-dim observation wrapper (discrete reward shaping disabled)
     env = TacticalLaneObservationWrapper(
@@ -1196,27 +1208,45 @@ def _run_smoke_test() -> None:
     )
     print("=" * 70)
 
+    # Scenarios with absolute=True that reject non-full_adas tiers
+    absolute_scenarios = {"roundabout", "intersection"}
+
     for s_idx, scenario in enumerate(scenarios, start=1):
         for t_idx, tier in enumerate(tiers, start=1):
             comb_idx = (s_idx - 1) * len(tiers) + t_idx
-            env = make_env(scenario=scenario, tier=tier, seed=42)
-            obs, info = env.reset(seed=42)
-            assert obs.shape == (15, 5), f"Expected shape (15, 5), got {obs.shape}"
+            should_raise = scenario in absolute_scenarios and tier != "full_adas"
 
-            for _ in range(5):
-                action = 1
-                obs, reward, terminated, truncated, info = env.step(action)
-                if terminated or truncated:
-                    obs, info = env.reset()
+            if should_raise:
+                try:
+                    make_env(scenario=scenario, tier=tier, seed=42)
+                    assert False, f"{scenario}/{tier} should have raised ValueError"
+                except ValueError:
+                    pass
+                passed_tests += 1
+                print(
+                    f"[{comb_idx:02d}/{total_tests:02d}] "
+                    f"scenario={scenario:<13} tier={tier:<12} "
+                    f"-> PASS (correctly raised ValueError)"
+                )
+            else:
+                env = make_env(scenario=scenario, tier=tier, seed=42)
+                obs, info = env.reset(seed=42)
+                assert obs.ndim == 2, f"Expected 2D obs, got shape {obs.shape}"
 
-            env.close()
-            passed_tests += 1
-            presences = int(np.sum(obs[:, 0]))
-            print(
-                f"[{comb_idx:02d}/{total_tests:02d}] "
-                f"scenario={scenario:<13} tier={tier:<12} "
-                f"shape={obs.shape} detected_vehicles={presences}/10 -> PASS"
-            )
+                for _ in range(5):
+                    action = 1
+                    obs, reward, terminated, truncated, info = env.step(action)
+                    if terminated or truncated:
+                        obs, info = env.reset()
+
+                env.close()
+                passed_tests += 1
+                presences = int(np.sum(obs[:, 0]))
+                print(
+                    f"[{comb_idx:02d}/{total_tests:02d}] "
+                    f"scenario={scenario:<13} tier={tier:<12} "
+                    f"shape={obs.shape} detected_vehicles={presences}/10 -> PASS"
+                )
 
     print("=" * 70)
     print(f"Smoke test complete: {passed_tests}/{total_tests} passed successfully.")
