@@ -43,6 +43,7 @@ Confidence intervals are exact Clopper-Pearson 95% binomial intervals. Detailed 
 | [models/](models/) | Pre-trained PyTorch checkpoints for PPO, PPO-LSTM, and Optimal Overtaker policies |
 | [deepset_v2/](deepset_v2/) | Permutation-invariant vehicle set observation wrapper and neural network agent |
 | [docs/](docs/) | Technical findings, known issues, environment specifications, and audit reports |
+| [PROJECT_CHRONICLE_AND_POSTMORTEM.md](PROJECT_CHRONICLE_AND_POSTMORTEM.md) | Comprehensive engineering trajectory, empirical post-mortem, and pathology analysis |
 | [eval_out/](eval_out/) | Evaluation telemetry, crash diagnostics, and checkpoint profile manifests |
 | [scripts/](scripts/) | Diagnostic utilities for pre-impact telemetry analysis and benchmark generation |
 | [tests/](tests/) | Unit tests verifying observation bounds, reward invariants, and model execution |
