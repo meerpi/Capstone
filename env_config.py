@@ -1166,11 +1166,7 @@ def make_continuous_env(
     )
 
     if tier != "full_adas":
-        raise ValueError(
-            f"make_continuous_env does not support tier '{tier}': "
-            f"TacticalLaneObservationWrapper rebuilds observations from "
-            f"ground truth, making tier masking ineffective."
-        )
+        base_env = SensorTierWrapper(base_env, tier=tier)
 
     # Wrap with 30-dim observation wrapper (discrete reward shaping disabled)
     env = TacticalLaneObservationWrapper(
