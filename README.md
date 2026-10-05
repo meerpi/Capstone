@@ -2,11 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Handbook](https://img.shields.io/badge/Documentation-Handbook%20PDF-red.svg)](autonomous_driving_capstone_handbook.pdf)
 
 An empirical benchmark evaluating autonomous highway decision-making under sensor-budgeted perception, classical heuristics, reinforcement learning, and constrained safe-RL in [HighwayEnv](https://github.com/Farama-Foundation/HighwayEnv).
-
-> 📖 **Comprehensive Manual Available:** For the complete A–Z mathematical derivations, architectural proofs, and line-by-line code defense guide, see the 23-page [**Capstone Handbook & Code Defense Guide (PDF)**](autonomous_driving_capstone_handbook.pdf).
 
 ---
 
@@ -99,7 +96,6 @@ pytest tests/deepset_v2/test_deepset_v2.py tests/test_render_utils.py
 | [`scripts/`](scripts/) | AV evaluation engine (`evaluate_av_metrics.py`), anti-aliasing utilities (`render_utils.py`) |
 | [`eval_out/`](eval_out/) | Raw empirical evaluation JSON telemetry and Fisher's test results |
 | [`visualizations/`](visualizations/) | Anti-aliased telemetry recordings and GIFs |
-| [`autonomous_driving_capstone_handbook.pdf`](autonomous_driving_capstone_handbook.pdf) | Complete 23-page mathematical & code defense handbook |
 
 ---
 

@@ -41,3 +41,8 @@ Form*.pdf
 # Scratch & temporary artifacts
 scratch/
 *.zip
+
+# Private Viva & Defense Handbook (Local only)
+*handbook*.pdf
+docs/*handbook*
+generate_typst_doc.py
