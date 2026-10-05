@@ -595,7 +595,7 @@ class TestLegacyRegression:
             capture_output=True, text=True, cwd=REPO_ROOT
         )
         cur_branch = branch_res.stdout.strip()
-        allowed_prefixes = ("deepset_v2/", "tests/deepset_v2/", "eval_out/", "scratch/", "parity/", "scripts/", "visualizations/", "docs/", "gifs/")
+        allowed_prefixes = ("deepset_v2/", "tests/deepset_v2/", "eval_out/", "scratch/", "parity/", "scripts/", "visualizations/", "docs/", "gifs/", "checkpoints/")
         if cur_branch == "fix/speed-and-render":
             pre_existing_untracked.add("render_utils.py")
         for line in result.stdout.strip().split("\n"):

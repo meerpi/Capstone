@@ -106,3 +106,18 @@
    - Re-generated `gifs/INDEX.md`.
    - Audited sampled GIFs: all measured 0.0% reverse frames (165.0 px dash period).
 
+## Standard AV & Safe-RL Empirical Benchmark (Seeds 4000–4099)
+
+- Created `scripts/evaluate_av_metrics.py` to evaluate the standard AV safety, efficiency, comfort, and statistical metrics across 12 policy configurations on a unified Highway-Env profile:
+  - 4 lanes, 14 vehicles, density 1.4, duration 100s (500 steps), 5 Hz policy and simulation frequency.
+  - 100 fresh held-out evaluation seeds (4000–4099) never used during diagnosis or tuning.
+  - Metrics computed: Exact 95% Clopper-Pearson CI, crashes/1000km, surviving speed vs all speed (removing crash truncation bias), min TTC, critical TTC % (<2.0s), min time headway, hard braking events / 100km (< -3.0 m/s^2), RMS acceleration, RMS jerk, lane changes / 100km, rapid reversals (<= 2s), action switch rate, and two-sided Fisher's exact test p-values vs IDM Only.
+- Tracked headline checkpoints under `checkpoints/` (`deepset_v2_highway_2m_best.pt`, `optimal_overtaker_extended_speeds_best.pt`, `optimal_overtaker_extended_speeds_seed137_best.pt`, `ppo_lagrangian_sep_norm_best.pt`).
+- Refined `README.md`:
+  - Replaced mixed-profile and mislabeled rows with unified empirical tables.
+  - Documented kinematic floor speed bottleneck and statistical parity between trivial deceleration (`always_SLOWER`, 22%), in-lane IDM (`IDM Only`, 22%), and feedforward PPO (25%, 0 lane changes, p=0.74).
+  - Explicitly differentiated privileged ground-truth observations (`Optimal Overtaker`) from sensor-budgeted detections (`round-1` and `DeepSet v2`).
+  - Documented multi-seed training variance in extended action spaces (Seed 42: 1/100 crashes; Seed 137: 5/100 crashes with 5,179 lane changes / 100km and 71.1% rapid reversals).
+  - Documented PPO-Lagrangian constraint violation (48/100 crashes vs 5% budget).
+  - Passed full test suite (31/31 passed in `tests/deepset_v2/test_deepset_v2.py` and `tests/test_render_utils.py`).
+
