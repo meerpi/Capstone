@@ -1,13 +1,13 @@
-"""Comprehensive benchmark runner comparing Classical (IDM+MOBIL) and PPO.
+"""Benchmark runner comparing Classical (IDM+MOBIL) and PPO agents.
 
 Runs evaluation on benchmark test seeds across sensor tiers:
 - full_adas (360-degree observation)
 - front_only (forward cone radar, blind spots behind)
 
 RL agents are trained with:
-- Mechanism A: Tailgating / Headway penalty (penalizes passive tailgating)
-- Mechanism B: Overtake bonus (+1.0 per vehicle overtaken)
-- Mechanism C: Invalid action masking (prevents boundary exploits)
+- Tailgating / Headway penalty (penalizes passive tailgating)
+- Overtake bonus (+1.0 per vehicle overtaken)
+- Invalid action masking (prevents boundary exploits)
 """
 
 import argparse
@@ -171,7 +171,7 @@ def load_classical_baseline_results(
     seed_start: int = 2000,
     save_dir: str = "eval_out",
 ) -> dict[str, dict[str, Any]]:
-    """Load or evaluate Stage 2 classical benchmark results."""
+    """Load or evaluate classical benchmark results."""
     path = os.path.join(save_dir, f"classical_baselines_{profile_name}.json")
     if os.path.exists(path):
         try:
@@ -328,7 +328,7 @@ def main() -> None:
     args = parse_args()
     tiers = ["full_adas", "front_only"]
 
-    print("Running Classical Baselines under 'legacy' and 'current' profiles...")
+    print("Running Classical Baselines under baseline and current speed profiles...")
     legacy_doc = evaluate_classical_baselines(
         "legacy", episodes=args.episodes, seed_start=args.seed_start
     )

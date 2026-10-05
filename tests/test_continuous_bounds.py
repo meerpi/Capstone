@@ -1,10 +1,10 @@
-"""Tests for continuous-control environment bounds and safety termination (E1-1, E4-1).
+"""Tests for continuous-control environment bounds and safety termination.
 
 Verifies:
 1. Negative speed prevention: The ego vehicle cannot reach negative speed (cannot drive backwards)
    even under sustained maximum deceleration.
 2. Off-road termination: Leaving the road surface terminates the episode immediately when
-   offroad_terminal=True, and does not alter legacy discrete configs.
+   offroad_terminal=True, and does not alter default discrete configs.
 """
 
 import math
@@ -17,7 +17,7 @@ import env_config
 
 class TestContinuousBounds(unittest.TestCase):
     def test_ego_cannot_reach_negative_speed(self) -> None:
-        """E1-1: Under maximum deceleration, ego speed cannot drop below 0.0 m/s."""
+        """Under maximum deceleration, ego speed cannot drop below 0.0 m/s."""
         env = env_config.make_continuous_env(seed=42)
         obs, info = env.reset(seed=42)
         
@@ -45,7 +45,7 @@ class TestContinuousBounds(unittest.TestCase):
         self.assertTrue(all(s >= 0.0 for s in speeds), "Encountered negative speed during braking")
 
     def test_leaving_road_terminates_episode(self) -> None:
-        """E4-1: Leaving the road boundary terminates the episode immediately with offroad_terminal=True."""
+        """Leaving the road boundary terminates the episode immediately with offroad_terminal=True."""
         env = env_config.make_continuous_env(seed=42, offroad_terminal=True)
         obs, info = env.reset(seed=42)
         ego = env.unwrapped.vehicle
@@ -68,7 +68,7 @@ class TestContinuousBounds(unittest.TestCase):
         self.assertTrue(terminated_due_to_offroad, "Test did not observe vehicle leaving road within 100 steps")
 
     def test_legacy_configs_do_not_set_offroad_terminal(self) -> None:
-        """E4-1 guard: Verify legacy discrete configs do NOT set offroad_terminal."""
+        """Verify discrete configs do not set offroad_terminal."""
         self.assertNotIn("offroad_terminal", env_config.DEFAULT_ENV_CONFIG)
         self.assertNotIn("offroad_terminal", env_config.SCENARIO_CONFIGS["highway"])
 

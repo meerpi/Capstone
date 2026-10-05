@@ -71,7 +71,7 @@ class TestContinuousObservationWrapper(unittest.TestCase):
             env_config.FrameStackTacticalWrapper,
         )
 
-        # 4. Backward-compatible legacy mode (27-dim base, 81-dim stacked)
+        # 4. Backward-compatible unaugmented mode (27-dim base, 81-dim stacked)
         env_legacy = env_config.make_optimal_env(
             seed=42,
             frame_stack_k=3,

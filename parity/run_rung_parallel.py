@@ -1,4 +1,4 @@
-"""Sequential, robust rung executor for SOTA parity ladder.
+"""Sequential rung executor for baseline parity ladder.
 
 Runs:
 1. Baselines on seeds 6000-6099

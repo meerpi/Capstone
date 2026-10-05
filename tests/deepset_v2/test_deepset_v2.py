@@ -391,7 +391,7 @@ class TestRewardEquivalence:
 
 class TestActionMaskEquality:
     def test_masks_match_legacy(self):
-        """Action masks match legacy at every step."""
+        """Action masks match make_optimal_env at every step."""
         for seed in range(4000, 4005):
             env_ds = make_deepset_env_v2(tier="full_adas", seed=seed)
             env_leg = make_optimal_env(frame_stack_k=0, seed=seed, target_speeds=[10.0, 15.0, 20.0, 25.0, 30.0])
@@ -530,11 +530,11 @@ class TestPolicyInputLeak:
             "DeepSetObsWrapper._build_deepset_obs accesses road.vehicles directly"
 
 
-# ---- Test 11: Legacy Regression ----
+# ---- Test 11: Optimal Env Baseline Regression ----
 
 class TestLegacyRegression:
     def test_golden_legacy_bitidentical(self):
-        """make_optimal_env obs/rewards match scratch/golden_legacy.npz."""
+        """make_optimal_env obs/rewards match reference golden observations."""
         npz_path = os.path.join(REPO_ROOT, "scratch", "golden_legacy.npz")
         if not os.path.exists(npz_path):
             pytest.skip("scratch/golden_legacy.npz not found")

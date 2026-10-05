@@ -403,7 +403,7 @@ def train(args: argparse.Namespace) -> str:
     start_iteration = 1
     last_save_step = 0
 
-    # Resume from checkpoint if requested (D1-1)
+    # Resume from checkpoint if requested
     if args.resume:
         if os.path.exists(args.resume):
             ckpt = torch.load(args.resume, map_location=device, weights_only=False)
@@ -558,7 +558,7 @@ def train(args: argparse.Namespace) -> str:
             lastgaelam = 0.0
             for t in reversed(range(args.num_steps)):
                 if getattr(args, "bootstrap_truncation", False):
-                    # Truncation Bootstrapping (B7-1 fix)
+                    # Truncation Bootstrapping
                     if t == args.num_steps - 1:
                         is_term = terms[t]
                         is_trunc = truncs[t]
@@ -583,7 +583,7 @@ def train(args: argparse.Namespace) -> str:
                     delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
                     advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnoncutoff * lastgaelam
                 else:
-                    # Legacy behavior (default OFF): collapses truncations into terminal
+                    # Unmasked behavior (default OFF): collapses truncations into terminal
                     if t == args.num_steps - 1:
                         nextnonterminal = 1.0 - next_done
                         nextvalues = next_value
@@ -851,7 +851,7 @@ def train(args: argparse.Namespace) -> str:
                 flush=True,
             )
 
-        # Checkpointing (D1-1)
+        # Checkpointing
         if args.checkpoint_dir and (global_step - last_save_step >= args.save_frequency):
             os.makedirs(args.checkpoint_dir, exist_ok=True)
             ckpt_data = {
@@ -1015,7 +1015,7 @@ def evaluate(
         else checkpoint
     )
 
-    # Infer expected observation dimension if not explicitly provided (C8-1 fix)
+    # Infer expected observation dimension if not explicitly provided
     if include_continuous_features is None:
         if isinstance(checkpoint, dict) and "obs_dim" in checkpoint:
             expected_obs_dim = checkpoint["obs_dim"]
@@ -1239,22 +1239,22 @@ def parse_args() -> argparse.Namespace:
         help="Value loss coefficient for cost critic (default: 0.5).",
     )
 
-    # Truncation Bootstrapping (B7-1)
+    # Truncation Bootstrapping
     parser.add_argument(
         "--bootstrap-truncation",
         action="store_true",
         default=False,
-        help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
+        help="Bootstrap value of final observation upon episode truncation.",
     )
     # Phantom Sample Masking
     parser.add_argument(
         "--keep-phantom-samples",
         action="store_true",
         default=False,
-        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics (legacy behavior).",
+        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics.",
     )
 
-    # Checkpointing and Resuming (D1-1)
+    # Checkpointing and Resuming
     parser.add_argument(
         "--checkpoint-dir",
         type=str,

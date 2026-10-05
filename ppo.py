@@ -226,7 +226,7 @@ def train_ppo(args: argparse.Namespace) -> str:
     )
     next_mask = torch.tensor(init_mask, dtype=torch.bool, device=device)
 
-    # Resume support (D1-1)
+    # Resume support
     start_iteration = 1
     last_save_step = 0
     if getattr(args, "resume", None) and os.path.exists(args.resume):
@@ -337,7 +337,7 @@ def train_ppo(args: argparse.Namespace) -> str:
             lastgaelam = 0.0
             for t in reversed(range(args.num_steps)):
                 if getattr(args, "bootstrap_truncation", False):
-                    # Truncation Bootstrapping (B7-1 fix)
+                    # Truncation Bootstrapping
                     if t == args.num_steps - 1:
                         is_term = terms[t]
                         is_trunc = truncs[t]
@@ -491,7 +491,7 @@ def train_ppo(args: argparse.Namespace) -> str:
                 flush=True,
             )
 
-        # Checkpointing (D1-1)
+        # Checkpointing
         if getattr(args, "checkpoint_dir", None) and (global_step - last_save_step >= getattr(args, "save_frequency", 50000)):
             os.makedirs(args.checkpoint_dir, exist_ok=True)
             ckpt_data = {
@@ -843,22 +843,22 @@ def parse_args() -> argparse.Namespace:
         help="Use SyncVectorEnv instead of AsyncVectorEnv.",
     )
 
-    # Truncation Bootstrapping (B7-1)
+    # Truncation Bootstrapping
     parser.add_argument(
         "--bootstrap-truncation",
         action="store_true",
         default=False,
-        help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
+        help="Bootstrap value of final observation upon episode truncation.",
     )
     # Phantom Sample Masking
     parser.add_argument(
         "--keep-phantom-samples",
         action="store_true",
         default=False,
-        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics (legacy behavior).",
+        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics.",
     )
 
-    # Checkpointing and Resuming (D1-1)
+    # Checkpointing and Resuming
     parser.add_argument(
         "--checkpoint-dir",
         type=str,

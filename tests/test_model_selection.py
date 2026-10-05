@@ -45,7 +45,7 @@ class TestLexicographicModelSelection(unittest.TestCase):
             "action_reversal_rate": 0.0,
         }
 
-        # Legacy eval_score (speed - 2*crash_rate) erroneously preferred crashing:
+        # Linear combination score (speed - 2*crash_rate) erroneously preferred crashing:
         old_score_zero = cand_zero_crash["mean_speed_kmh"] - cand_zero_crash["crash_rate"] * 2.0
         old_score_crashing = cand_crashing_fast["mean_speed_kmh"] - cand_crashing_fast["crash_rate"] * 2.0
         self.assertGreater(old_score_crashing, old_score_zero)

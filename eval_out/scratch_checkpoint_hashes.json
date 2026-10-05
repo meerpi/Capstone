@@ -1,0 +1,66 @@
+[
+  {
+    "model_path": "scratch/deepset_v2_highway_2m/deepset_v2_highway_best.pt",
+    "exists": true,
+    "sha256": "1f1d2fdea57f5b89d2319ec38556ec0883b38258a5d631921c18e666e06ce1f3",
+    "cited_by": [
+      "eval_out/crash_breakdown_2m_seeds2000.json"
+    ]
+  },
+  {
+    "model_path": "scratch/deepset_v2_highway_retrain_seed42/deepset_v2_highway_best.pt",
+    "exists": true,
+    "sha256": "b0f230f6ca0b63c0397bcd6403b266f88e62dd34093d600bc096b23f843fc1c2",
+    "cited_by": [
+      "eval_out/deepset_v2_retrain_seed42_100seeds.json"
+    ]
+  },
+  {
+    "model_path": "scratch/optimal_overtaker_extended_speeds/final.pt",
+    "exists": true,
+    "sha256": "b81358bd14650531d40bac5fde68b667749319b574714c9fe4f2e347b5354684",
+    "cited_by": [
+      "eval_out/crash_breakdown_optimal_overtaker_extended_speeds_final.json"
+    ]
+  },
+  {
+    "model_path": "scratch/optimal_overtaker_extended_speeds/ppo_optimal_overtaker_4lane_best.pt",
+    "exists": true,
+    "sha256": "55fed03fdbad75395354bfc7f6126c2b498bb8f61d1c8c8226d8f9ca88979fda",
+    "cited_by": [
+      "eval_out/crash_breakdown_optimal_overtaker_extended_speeds.json"
+    ]
+  },
+  {
+    "model_path": "scratch/optimal_overtaker_extended_speeds_seed137/final.pt",
+    "exists": true,
+    "sha256": "e668d0ea9a2fd43039d334079ab5c05fed4e1a774959477ef474ac035982b193",
+    "cited_by": [
+      "eval_out/crash_breakdown_optimal_overtaker_seed137_final.json"
+    ]
+  },
+  {
+    "model_path": "scratch/optimal_overtaker_extended_speeds_seed137/ppo_optimal_overtaker_4lane_best.pt",
+    "exists": true,
+    "sha256": "31e9ff7b33a5b3032cae5805ce41e94a8ce8fd8f70ce9254c29ae9c5eac17fcb",
+    "cited_by": [
+      "eval_out/crash_breakdown_optimal_overtaker_seed137_best.json"
+    ]
+  },
+  {
+    "model_path": "scratch/ppo_lagrangian_1m_sep_norm/ppo_optimal_overtaker_4lane_best.pt",
+    "exists": true,
+    "sha256": "be45365f0b0c7f3999f954528794608ead1d758f497b279c227b7cb185e6fc93",
+    "cited_by": [
+      "eval_out/crash_breakdown_ppo_lagrangian_sep_norm.json"
+    ]
+  },
+  {
+    "model_path": "scratch/seed_replicates/highway_1m_seed42/deepset_v2_highway_best.pt",
+    "exists": true,
+    "sha256": "8691e7efc54e2aae3e91122099395402dea567afe67b8cd00c78e1edc2fd1236",
+    "cited_by": [
+      "eval_out/crash_diagnostics/crash_diagnosis_report.json"
+    ]
+  }
+]

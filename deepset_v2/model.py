@@ -1,7 +1,7 @@
 """DeepSet v2 actor-critic agent for highway-fast-v0.
 
 Ego-conditioned Deep Set with separate actor/critic encoders, parameter-matched
-to the legacy 3×256 OptimalAgent within ±15%.
+to the 3×256 MLP OptimalAgent baseline within ±15%.
 
 Architecture:
     phi(v_i; ego): shared MLP over [vehicle_feats ; ego] → emb_dim
@@ -32,7 +32,7 @@ ACTION_DIM = 5
 
 
 def _layer_init(layer: nn.Linear, std: float = np.sqrt(2), bias_const: float = 0.0) -> nn.Linear:
-    """Orthogonal weight init + constant bias, matching legacy OptimalAgent."""
+    """Orthogonal weight init + constant bias, matching OptimalAgent."""
     nn.init.orthogonal_(layer.weight, std)
     nn.init.constant_(layer.bias, bias_const)
     return layer
@@ -115,8 +115,8 @@ class _DeepSetEncoder(nn.Module):
 class DeepSetAgent(nn.Module):
     """Actor-Critic agent with ego-conditioned Deep Set backbone.
 
-    Separate actor and critic encoders (no weight sharing), matching legacy
-    OptimalAgent. Compatible method signatures for drop-in PPO loop usage.
+    Separate actor and critic encoders (no weight sharing), matching
+    OptimalAgent baseline. Compatible method signatures for drop-in PPO loop usage.
     """
 
     def __init__(self) -> None:
@@ -185,7 +185,7 @@ class DeepSetAgent(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Compute action, log probability, entropy, and value.
 
-        Signature-compatible with legacy OptimalAgent.
+        Signature-compatible with OptimalAgent.
         """
         ego, feats, mask = self._parse_obs(x)
 

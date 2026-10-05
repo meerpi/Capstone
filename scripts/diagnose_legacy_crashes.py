@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Detailed crash failure-mode breakdown for legacy Optimal Overtaker & PPO-Lagrangian models.
+"""Detailed crash failure-mode breakdown for baseline Optimal Overtaker & PPO-Lagrangian models.
 
 Applies the exact same crash categorization logic as diagnose_hb_crashes.py:
 - (a) Floor-speed rear-end: ego in-lane, not actively changing lanes, closing on lead vehicle
@@ -117,7 +117,7 @@ def evaluate_and_diagnose(
     floor_speed: float = 20.0,
     target_speeds: list[float] | None = None,
 ) -> dict[str, Any]:
-    """Run 100-episode evaluation of legacy agent and extract crash breakdown."""
+    """Run 100-episode evaluation of baseline agent and extract crash breakdown."""
     device = torch.device("cpu")
     print(f"Loading checkpoint from: {model_path}")
     checkpoint = torch.load(model_path, map_location=device, weights_only=False)
@@ -356,7 +356,7 @@ def evaluate_and_diagnose(
         json.dump(summary, f, indent=2, default=str)
 
     print("\n" + "=" * 80)
-    print("CRASH-CAUSE BREAKDOWN SUMMARY (LEGACY PIPELINE)")
+    print("CRASH-CAUSE BREAKDOWN SUMMARY (BASELINE PIPELINE)")
     print("=" * 80)
     print(f"Model: {model_path}")
     print(f"Episodes: {n_episodes} (seeds {seed_start}..{seed_start + n_episodes - 1})")

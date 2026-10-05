@@ -1,4 +1,4 @@
-"""Unit test verifying truncation bootstrapping vs old terminal truncation behavior (B7-1).
+"""Unit test verifying truncation bootstrapping vs terminal truncation behavior.
 
 Tests on a synthetic time-limited environment with constant reward r = 1.0:
 - True infinite-horizon analytical return: V*(s) = sum_{k=0}^infty gamma^k * 1.0 = 1 / (1 - gamma) = 100.0 (at gamma = 0.99)
@@ -84,7 +84,7 @@ def compute_gae_returns(
             delta = rewards[t] + gamma * nextvalues * nextnonterminal - values[t]
             advantages[t] = lastgaelam = delta + gamma * gae_lambda * nextnoncutoff * lastgaelam
         else:
-            # Old legacy behavior: collapses truncations into terminal flags
+            # Terminal truncation behavior: collapses truncations into terminal flags
             is_done = float(terminations[t] or truncations[t])
             nextnonterminal = 1.0 - is_done
             nextvalues = next_value if t == num_steps - 1 else values[t + 1]

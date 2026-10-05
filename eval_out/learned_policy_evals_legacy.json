@@ -1,0 +1,90 @@
+{
+  "profile": "legacy",
+  "profile_parameters": {
+    "observation": {
+      "vehicles_count": 10
+    },
+    "vehicles_count": 10,
+    "vehicles_density": 1.0,
+    "duration": 40,
+    "step_cap": 200,
+    "policy_frequency": 5
+  },
+  "git_commit": "d8638b19966a293b91f81367d8df60ba78f0500e",
+  "package_versions": {
+    "highway_env": "1.12.1",
+    "gymnasium": "1.3.0",
+    "torch": "2.14.0+cu130",
+    "numpy": "2.5.2"
+  },
+  "seeds": {
+    "start": 2000,
+    "end": 2099,
+    "count": 100
+  },
+  "results": {
+    "front_only_ppo": {
+      "policy": "Feedforward PPO",
+      "tier": "front_only",
+      "controller": "ppo",
+      "profile": "legacy",
+      "checkpoint_path": "models/ppo_highway_front_only_seed101.pt",
+      "sha256": "df6bcfc5df17be550e3dfcc9947b29a624187a2637ee5bf52c2c3079ed1fe332",
+      "episodes": 100,
+      "crashes": 2,
+      "crash_fraction": "2/100",
+      "crash_rate": 2.0,
+      "ci_95": [
+        0.0024313368239425423,
+        0.07038393247107011
+      ],
+      "mean_duration": 196.55,
+      "std_duration": 24.21461335640113,
+      "mean_steps": 196.55,
+      "mean_speed_kmh": 74.23784950235469,
+      "mean_lane_changes": 1.45
+    },
+    "full_adas_ppo_lstm": {
+      "policy": "Recurrent PPO-LSTM",
+      "tier": "full_adas",
+      "controller": "ppo_lstm",
+      "profile": "legacy",
+      "checkpoint_path": "models/ppo_lstm_highway_full_adas_seed101.pt",
+      "sha256": "e2759653e650d6c769ca0a98dd39d057fbcf12ffef80a20af141546e45022a58",
+      "episodes": 100,
+      "crashes": 100,
+      "crash_fraction": "100/100",
+      "crash_rate": 100.0,
+      "ci_95": [
+        0.9637833073548235,
+        1.0
+      ],
+      "mean_duration": 54.25,
+      "std_duration": 35.05320955347741,
+      "mean_steps": 54.25,
+      "mean_speed_kmh": 106.8777979779153,
+      "mean_lane_changes": 0.0
+    },
+    "front_only_ppo_lstm": {
+      "policy": "Recurrent PPO-LSTM",
+      "tier": "front_only",
+      "controller": "ppo_lstm",
+      "profile": "legacy",
+      "checkpoint_path": "models/ppo_lstm_highway_front_only_seed101.pt",
+      "sha256": "746faea35406ad49c49a9e9740a837e528b5789b7b26915ad370cc762d3dd21b",
+      "episodes": 100,
+      "crashes": 1,
+      "crash_fraction": "1/100",
+      "crash_rate": 1.0,
+      "ci_95": [
+        0.00025314603297742064,
+        0.054459385392080645
+      ],
+      "mean_duration": 198.3,
+      "std_duration": 16.914786430812537,
+      "mean_steps": 198.3,
+      "mean_speed_kmh": 72.5069992871617,
+      "mean_lane_changes": 1.45
+    }
+  }
+}

@@ -1,12 +1,12 @@
 """Continuous-control ground-truth reward function and environment wrapper for HighwayEnv.
 
-Implements the calibrated continuous reward function specified in Sprint 1:
+Calibrated continuous reward function components:
 1. R_speed: Trapezoidal speed incentive [v_min, v_target, v_max, k_v]
 2. R_jerk: Control derivative penalty on a_dot and delta_dot
 3. R_TTC & R_headway: Closing-only time-to-collision and headway penalties
 4. R_overtake: Anti-farming dwell-checked overtake credit
 5. R_control: Action change magnitude penalty ||u_t - u_{t-1}||^2
-6. R_terminal: Catastrophic crash penalty sized to dominate discounted future returns
+6. R_terminal: Terminal collision penalty sized to exceed discounted future speed reward
 
 All terms are computed strictly from simulator ground-truth states (unwrapped road
 and vehicle physics), never from perception-filtered observations.
@@ -279,7 +279,7 @@ class ContinuousRewardFunction:
             r_overtake_norm = 1.0
 
         # ---------------------------------------------------------------------
-        # 6. R_terminal: Catastrophic crash / terminal offroad penalty
+        # 6. R_terminal: Terminal crash / offroad penalty
         # ---------------------------------------------------------------------
         crashed = bool(getattr(ego, "crashed", False))
         on_road = bool(getattr(ego, "on_road", True))
@@ -292,8 +292,8 @@ class ContinuousRewardFunction:
             r_crash_norm = 0.0
 
         # ---------------------------------------------------------------------
-        # TODO (Sprint 3): Insert tau_stale feature and staleness-gated
-        # lane-change regularization penalty here once sensor noise model is added.
+        # Tau_stale feature and staleness-gated lane-change regularization
+        # penalty to be inserted once sensor noise model is added.
         # ---------------------------------------------------------------------
 
         # ---------------------------------------------------------------------
@@ -380,7 +380,7 @@ class ContinuousHighwayWrapper(gym.Wrapper):
     ) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         obs, base_reward, terminated, truncated, info = self.env.step(action)
 
-        # Enforce non-negative speed bound (E1-1: prevents numerical undershoot below 0.0 m/s)
+        # Enforce non-negative speed bound: prevents numerical undershoot below 0.0 m/s
         unwrapped = self.env.unwrapped
         if hasattr(unwrapped, "vehicle") and unwrapped.vehicle is not None:
             if unwrapped.vehicle.speed < 0.0:

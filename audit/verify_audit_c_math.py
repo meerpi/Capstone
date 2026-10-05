@@ -1,5 +1,5 @@
-"""Audit C: Comprehensive Math, Wrapper, Reward, and Regression Verification Script.
-Exhaustively checks C1-C8 with empirical evidence and mathematical proofs.
+"""Math, wrapper, reward, and regression verification script.
+Checks items C1-C8 with empirical evidence and mathematical proofs.
 """
 
 import copy
@@ -293,7 +293,7 @@ if os.path.exists("models/ppo_optimal_overtaker_4lane.pt"):
             opt_crashes += 1
         print(f"    Optimal Agent Seed {s}: crashed = {crashed}")
     env_legacy.close()
-    print(f"  Legacy 81-dim Optimal Agent crashes on seeds 2000-2004: {opt_crashes}/5.")
+    print(f"  Unconstrained 81-dim Optimal Agent crashes on seeds 2000-2004: {opt_crashes}/5.")
 else:
     print("  models/ppo_optimal_overtaker_4lane.pt not found!")
 

@@ -16,8 +16,8 @@ Supports scenarios:
 - 'highway' (highway-fast-v0, 500-step episodes)
 - 'merge' (merge-v1, ramp-merge coordination)
 
-CRITICAL SAFETY: All checkpoints and evaluation outputs are written strictly
-to scratch/ or user-specified output directories. models/ is strictly read-only.
+Output isolation: All checkpoints and evaluation outputs are written strictly
+to scratch/ or user-specified output directories; models/ is read-only.
 """
 
 from __future__ import annotations
@@ -610,7 +610,7 @@ def parse_args() -> argparse.Namespace:
         "--keep-phantom-samples",
         action="store_true",
         default=False,
-        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics (legacy behavior).",
+        help="Include phantom samples (dones=1 transitions after reset) in losses and statistics.",
     )
 
     # Output / Validation

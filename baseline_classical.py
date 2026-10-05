@@ -49,7 +49,7 @@ def parse_observation_neighbors(
     privileged access to simulator road networks.
 
     Args:
-        obs: Observation tensor of shape (10, 5).
+        obs: Observation array of shape (N, 5), default (15, 5).
         rx: Longitudinal normalization scale in meters.
         ry: Lateral normalization scale in meters.
         rv: Velocity normalization scale in m/s (default: 80.0).
@@ -341,7 +341,7 @@ def compute_idm_discrete_action(
 
     Args:
         env: Gymnasium environment instance.
-        obs: Observation tensor of shape (10, 5).
+        obs: Observation array of shape (N, 5), default (15, 5).
         params: IDM parameter dictionary.
 
     Returns:
@@ -389,7 +389,7 @@ def compute_idm_mobil_discrete_action(
 
     Args:
         env: Gymnasium environment instance.
-        obs: Observation tensor of shape (10, 5).
+        obs: Observation array of shape (N, 5), default (15, 5).
         params: IDM+MOBIL parameter dictionary.
 
     Returns:
@@ -547,7 +547,7 @@ def run_stage2_evaluation(
     episodes: int = 30,
     seed_start: int = 2000,
 ) -> list[dict[str, Any]]:
-    """Execute complete Stage 2 evaluation across scenarios, tiers, and controllers.
+    """Execute classical baseline evaluation across scenarios, tiers, and controllers.
 
     Args:
         scenarios: List of scenario names.
@@ -586,13 +586,13 @@ def run_stage2_evaluation(
 
 
 def print_stage2_summary_table(results: list[dict[str, Any]]) -> None:
-    """Print formatted summary table of Stage 2 classical baseline results.
+    """Print formatted summary table of classical baseline results.
 
     Args:
         results: List of evaluation result dictionaries.
     """
     print("\n" + "=" * 94)
-    print("STAGE 2: CLASSICAL MOTION PLANNING BASELINE BENCHMARK TABLE")
+    print("CLASSICAL MOTION PLANNING BASELINE BENCHMARK TABLE")
     print("=" * 94)
     header = (
         f"| {'Scenario':<12} | {'Tier':<12} | {'Controller':<10} | "
@@ -618,9 +618,9 @@ def print_stage2_summary_table(results: list[dict[str, Any]]) -> None:
 
 
 def main() -> None:
-    """Parse CLI arguments and execute Stage 2 classical baseline benchmarks."""
+    """Parse CLI arguments and execute classical baseline benchmarks."""
     parser = argparse.ArgumentParser(
-        description="Stage 2: Observation-Driven Classical Baseline (IDM/MOBIL)."
+        description="Observation-Driven Classical Baseline (IDM/MOBIL)."
     )
     parser.add_argument(
         "--episodes",
@@ -668,7 +668,7 @@ def main() -> None:
     )
 
     print(
-        f"Starting Stage 2 Classical Baseline: scenarios={scenarios}, "
+        f"Starting Classical Baseline: scenarios={scenarios}, "
         f"tiers={tiers}, controllers={controllers}, episodes={args.episodes}, "
         f"seed_start={args.seed_start}"
     )

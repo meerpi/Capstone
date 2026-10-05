@@ -11,7 +11,7 @@
       "step_cap": 200,
       "policy_frequency": 5
     },
-    "git_commit": "bebdb357e4498d7554bbe9ea2458bc498b89c1aa",
+    "git_commit": "d8638b19966a293b91f81367d8df60ba78f0500e",
     "package_versions": {
       "highway_env": "1.12.1",
       "gymnasium": "1.3.0",
@@ -19,9 +19,9 @@
       "numpy": "2.5.2"
     },
     "seeds": {
-      "start": 2000,
-      "end": 2099,
-      "count": 100
+      "start": 9000,
+      "end": 9000,
+      "count": 1
     },
     "results": {
       "full_adas_idm_only": {
@@ -29,17 +29,17 @@
         "tier": "full_adas",
         "controller": "idm_only",
         "profile": "legacy",
-        "episodes": 100,
+        "episodes": 1,
         "crashes": 0,
-        "crash_fraction": "0/100",
+        "crash_fraction": "0/1",
         "crash_rate": 0.0,
         "ci_95": [
           0.0,
-          0.03621669264517641
+          0.975
         ],
         "mean_duration": 200.0,
         "std_duration": 0.0,
-        "mean_speed_kmh": 81.2221310067296,
+        "mean_speed_kmh": 93.00247340344828,
         "mean_lane_changes": 0.0
       },
       "full_adas_idm_mobil": {
@@ -47,35 +47,35 @@
         "tier": "full_adas",
         "controller": "idm_mobil",
         "profile": "legacy",
-        "episodes": 100,
-        "crashes": 10,
-        "crash_fraction": "10/100",
-        "crash_rate": 10.0,
+        "episodes": 1,
+        "crashes": 0,
+        "crash_fraction": "0/1",
+        "crash_rate": 0.0,
         "ci_95": [
-          0.04900468922148595,
-          0.17622259774002266
+          0.0,
+          0.975
         ],
-        "mean_duration": 187.5,
-        "std_duration": 42.685477624128794,
-        "mean_speed_kmh": 82.39746813744785,
-        "mean_lane_changes": 5.93
+        "mean_duration": 200.0,
+        "std_duration": 0.0,
+        "mean_speed_kmh": 88.81336434364268,
+        "mean_lane_changes": 3.0
       },
       "front_only_idm_only": {
         "policy": "IDM Only (Lane-Keeping)",
         "tier": "front_only",
         "controller": "idm_only",
         "profile": "legacy",
-        "episodes": 100,
+        "episodes": 1,
         "crashes": 0,
-        "crash_fraction": "0/100",
+        "crash_fraction": "0/1",
         "crash_rate": 0.0,
         "ci_95": [
           0.0,
-          0.03621669264517641
+          0.975
         ],
         "mean_duration": 200.0,
         "std_duration": 0.0,
-        "mean_speed_kmh": 81.2221310067296,
+        "mean_speed_kmh": 93.00247340344828,
         "mean_lane_changes": 0.0
       },
       "front_only_idm_mobil": {
@@ -83,18 +83,18 @@
         "tier": "front_only",
         "controller": "idm_mobil",
         "profile": "legacy",
-        "episodes": 100,
-        "crashes": 54,
-        "crash_fraction": "54/100",
-        "crash_rate": 54.0,
+        "episodes": 1,
+        "crashes": 1,
+        "crash_fraction": "1/1",
+        "crash_rate": 100.0,
         "ci_95": [
-          0.4374115798664712,
-          0.640156647020588
+          0.025,
+          1.0
         ],
-        "mean_duration": 134.34,
-        "std_duration": 69.70914143783439,
-        "mean_speed_kmh": 83.65582816349723,
-        "mean_lane_changes": 6.41
+        "mean_duration": 157.0,
+        "std_duration": 0.0,
+        "mean_speed_kmh": 90.24763899232647,
+        "mean_lane_changes": 5.0
       }
     }
   },
@@ -110,7 +110,7 @@
       "step_cap": 500,
       "policy_frequency": 5
     },
-    "git_commit": "bebdb357e4498d7554bbe9ea2458bc498b89c1aa",
+    "git_commit": "d8638b19966a293b91f81367d8df60ba78f0500e",
     "package_versions": {
       "highway_env": "1.12.1",
       "gymnasium": "1.3.0",
@@ -118,9 +118,9 @@
       "numpy": "2.5.2"
     },
     "seeds": {
-      "start": 2000,
-      "end": 2099,
-      "count": 100
+      "start": 9000,
+      "end": 9000,
+      "count": 1
     },
     "results": {
       "full_adas_idm_only": {
@@ -128,17 +128,17 @@
         "tier": "full_adas",
         "controller": "idm_only",
         "profile": "current",
-        "episodes": 100,
-        "crashes": 11,
-        "crash_fraction": "11/100",
-        "crash_rate": 11.0,
+        "episodes": 1,
+        "crashes": 0,
+        "crash_fraction": "0/1",
+        "crash_rate": 0.0,
         "ci_95": [
-          0.05620702028548746,
-          0.18830113219644257
+          0.0,
+          0.975
         ],
-        "mean_duration": 452.54,
-        "std_duration": 135.75039005468824,
-        "mean_speed_kmh": 76.20307085470928,
+        "mean_duration": 500.0,
+        "std_duration": 0.0,
+        "mean_speed_kmh": 73.54799956939587,
         "mean_lane_changes": 0.0
       },
       "full_adas_idm_mobil": {
@@ -146,35 +146,35 @@
         "tier": "full_adas",
         "controller": "idm_mobil",
         "profile": "current",
-        "episodes": 100,
-        "crashes": 16,
-        "crash_fraction": "16/100",
-        "crash_rate": 16.0,
+        "episodes": 1,
+        "crashes": 0,
+        "crash_fraction": "0/1",
+        "crash_rate": 0.0,
         "ci_95": [
-          0.09431028997394623,
-          0.24678759741086234
+          0.0,
+          0.975
         ],
-        "mean_duration": 430.69,
-        "std_duration": 161.28097810963322,
-        "mean_speed_kmh": 77.27035863576168,
-        "mean_lane_changes": 5.84
+        "mean_duration": 500.0,
+        "std_duration": 0.0,
+        "mean_speed_kmh": 82.57947869490974,
+        "mean_lane_changes": 3.0
       },
       "front_only_idm_only": {
         "policy": "IDM Only (Lane-Keeping)",
         "tier": "front_only",
         "controller": "idm_only",
         "profile": "current",
-        "episodes": 100,
-        "crashes": 11,
-        "crash_fraction": "11/100",
-        "crash_rate": 11.0,
+        "episodes": 1,
+        "crashes": 0,
+        "crash_fraction": "0/1",
+        "crash_rate": 0.0,
         "ci_95": [
-          0.05620702028548746,
-          0.18830113219644257
+          0.0,
+          0.975
         ],
-        "mean_duration": 452.54,
-        "std_duration": 135.75039005468824,
-        "mean_speed_kmh": 76.20307085470928,
+        "mean_duration": 500.0,
+        "std_duration": 0.0,
+        "mean_speed_kmh": 73.54799956939587,
         "mean_lane_changes": 0.0
       },
       "front_only_idm_mobil": {
@@ -182,18 +182,18 @@
         "tier": "front_only",
         "controller": "idm_mobil",
         "profile": "current",
-        "episodes": 100,
-        "crashes": 72,
-        "crash_fraction": "72/100",
-        "crash_rate": 72.0,
+        "episodes": 1,
+        "crashes": 1,
+        "crash_fraction": "1/1",
+        "crash_rate": 100.0,
         "ci_95": [
-          0.6213329952827327,
-          0.8052063725088184
+          0.025,
+          1.0
         ],
-        "mean_duration": 269.54,
-        "std_duration": 185.4505551353244,
-        "mean_speed_kmh": 77.10014527682387,
-        "mean_lane_changes": 4.4
+        "mean_duration": 352.0,
+        "std_duration": 0.0,
+        "mean_speed_kmh": 82.91973719707654,
+        "mean_lane_changes": 5.0
       }
     }
   },

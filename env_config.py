@@ -132,7 +132,7 @@ def get_scaling_factors(env: gym.Env | None) -> tuple[float, float]:
 
 
 def filter_full_adas(obs: np.ndarray, rx: float, ry: float) -> np.ndarray:
-    """Tier 0: Full 360 degree radar, 100m range, position + velocity.
+    """Tier 0: Sensor observation with no range or angle filtering.
 
     Passes through all vehicles unmodified.
 
@@ -142,7 +142,7 @@ def filter_full_adas(obs: np.ndarray, rx: float, ry: float) -> np.ndarray:
         ry: Lateral normalization scale factor in meters.
 
     Returns:
-        Unmodified copy of observation array.
+        Copy of observation array of shape (N, F).
     """
     return obs.copy()
 
@@ -308,11 +308,11 @@ def get_scenario_names() -> list[str]:
 class TacticalOvertakingWrapper(gym.Wrapper):
     """Augments highway-env with overtaking bonus, headway penalty, and action masks.
 
-    Mechanisms implemented:
-    - Mechanism A (Headway penalty): Penalizes tailgating when blocked in-lane
-      within 25m of a lead vehicle at positive or matching relative speed.
-    - Mechanism B (Overtake bonus): Rewards overtaking vehicles (+5.0 per vehicle).
-    - Mechanism C (Action masking): Exposes valid discrete action mask in info dict.
+    Components implemented:
+    - Headway penalty: Penalizes tailgating when blocked in-lane
+      within 40.0m of a lead vehicle at positive or matching relative speed.
+    - Overtake bonus: Rewards overtaking vehicles (+5.0 per vehicle).
+    - Action masking: Exposes valid discrete action mask in info dict.
     """
 
     def __init__(
@@ -380,7 +380,7 @@ class TacticalOvertakingWrapper(gym.Wrapper):
 
         if hasattr(unwrapped, "vehicle") and hasattr(unwrapped, "road"):
             ego = unwrapped.vehicle
-            # Mechanism B: Overtake bonus (only for same or adjacent lane vehicles, dwell >= 5 steps, once per episode)
+            # Overtake bonus (only for same or adjacent lane vehicles, dwell >= 5 steps, once per episode)
             current_candidates: list[tuple[float, int]] = []
             ego_lane = ego.lane_index[2] if hasattr(ego, "lane_index") else 0
             for v in unwrapped.road.vehicles:
@@ -414,7 +414,7 @@ class TacticalOvertakingWrapper(gym.Wrapper):
                 overtake_count = 1
                 bonus += self.overtake_reward
 
-            # Mechanism A: Headway penalty for tailgating a slower lead car in lane
+            # Headway penalty for tailgating a slower lead car in lane
             if not ego.crashed and hasattr(unwrapped.road, "neighbour_vehicles"):
                 front, _ = unwrapped.road.neighbour_vehicles(
                     ego, ego.lane_index
@@ -452,7 +452,7 @@ def wrap_to_pi(x: float) -> float:
 class TacticalLaneObservationWrapper(gym.Wrapper):
     """Structured lane-slot observation wrapper for tactical overtaking and continuous control.
 
-    Produces a 30-dimensional observation vector (or 27-dimensional legacy vector)
+    Produces a 30-dimensional observation vector (or 27-dimensional base vector)
     organized from the driver's tactical and continuous control perspective:
     - Ego State (5): speed, target_speed, lane_position, can_left, can_right
     - Lane Slots (16): 4 lanes × (lead_dist, lead_dv, lag_dist, lag_dv)
@@ -947,7 +947,8 @@ def make_env(
         tier: Sensor tier ('full_adas', 'front_only', 'short_range', 'no_velocity').
         seed: Optional random seed for reproducible initialization.
         render_mode: Rendering mode ('human', 'rgb_array', or None).
-        tactical_overtaking: If True, wraps with TacticalOvertakingWrapper (Mechanisms A, B, C).
+        tactical_overtaking: If True, wraps with TacticalOvertakingWrapper
+            (headway penalty, overtake bonus, and action masking).
         **overrides: Optional configuration overrides to merge into the environment
             config.
 
@@ -1030,14 +1031,14 @@ def make_optimal_env(
         duration: Episode duration in simulated seconds (100s = 500 steps).
         include_continuous_features: If True, computes and appends 3 continuous control
             stability features (psi_err, y_lane, yaw_rate) to yield 30-dim base
-            (or 90-dim stacked at K=3). If False, outputs legacy 27-dim base (81-dim stacked).
+            (or 90-dim stacked at K=3). If False, outputs 27-dim base (81-dim stacked).
         collision_penalty: Terminal collision penalty for reward shaping (default: -50.0).
         overtake_bonus: Overtake bonus per vehicle for reward shaping (default: 1.0).
         constrained_mode: If True, strips collision penalty from reward and emits info['cost'].
         overtake_dwell_steps: Dwell steps required before crediting overtake (default: 5).
         max_overtake_lon_dist: Maximum longitudinal distance behind ego for overtake credit (default: 30.0).
         target_speeds: Optional list of target speeds for DiscreteMetaAction (default: None = [20, 25, 30]).
-        lateral_debounce_steps: Minimum lock steps preventing opposing lateral reversals (default: 5).
+        lateral_debounce_steps: Minimum lock steps preventing opposing lateral reversals (default: 0).
 
     Returns:
         Wrapped environment producing 90-dim (K=3) or 30-dim (K=0) observations
@@ -1107,7 +1108,7 @@ def make_continuous_env(
 ) -> gym.Env:
     """Create an environment with ContinuousAction, ground-truth reward, and 30-dim observation wrapper.
 
-    Factory function for continuous-control overtaking agent pipeline (Sprint 1).
+    Factory function for continuous-control overtaking agent pipeline.
 
     Args:
         lanes_count: Number of highway lanes.
@@ -1203,7 +1204,7 @@ def _run_smoke_test() -> None:
 
     print("=" * 70)
     print(
-        f"Running Stage 1 Smoke Test ({total_tests} combinations: "
+        f"Running Environment Smoke Test ({total_tests} combinations: "
         f"{len(scenarios)} scenarios x {len(tiers)} tiers)"
     )
     print("=" * 70)

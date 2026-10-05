@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Detailed crash failure-mode breakdown for DeepSet v2 on highway-fast-v0.
 
-Directly tests Hypothesis H-B on the production setup:
-Evaluates a trained DeepSet v2 checkpoint on 100 seeds.
+Evaluates a trained DeepSet v2 checkpoint on 100 seeds to test floor-speed crash causes:
 For every crashing episode, logs:
 - Step of impact
 - Ego speed (m/s and km/h), lane, lateral position, action history

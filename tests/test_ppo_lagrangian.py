@@ -219,7 +219,7 @@ class TestCostGAETermination(unittest.TestCase):
                     delta_cost + gamma * gae_lambda * nextnoncutoff * cost_lastgaelam
                 )
             else:
-                # Legacy behavior: collapses truncations into terminal
+                # Unmasked behavior: collapses truncations into terminal
                 is_done = float(terminations[t].item() or truncations[t].item())
                 nextnonterminal = 1.0 - is_done
                 nextcostvalues = (
@@ -439,7 +439,7 @@ class TestOptimalAgentDualCritic(unittest.TestCase):
         self.assertEqual(cv.shape, (4, 1))
 
     def test_agent_without_cost_critic(self) -> None:
-        """When use_cost_critic=False (legacy), agent has no cost_critic attribute."""
+        """When use_cost_critic=False, agent has no cost_critic attribute."""
         obs_dim = 81
         action_dim = 5
         agent = OptimalAgent(obs_dim=obs_dim, action_dim=action_dim, use_cost_critic=False)

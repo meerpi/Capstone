@@ -1,7 +1,7 @@
 """DeepSet v2 environment wrapper for highway-fast-v0.
 
 Provides set-structured policy observations with sensor-tier filtering,
-while reusing the legacy TacticalLaneObservationWrapper for reward and info.
+while reusing TacticalLaneObservationWrapper for reward and info.
 """
 
 from __future__ import annotations
@@ -21,10 +21,10 @@ from env_config import (
 )
 
 # ---- Feature scaling constants (physical units → normalised) ----
-X_SCALE = 100.0    # metres, legacy horizon (MAX_LEAD_DIST / MAX_LAG_DIST)
+X_SCALE = 100.0    # metres, observation horizon (MAX_LEAD_DIST / MAX_LAG_DIST)
 Y_SCALE = 4.0      # metres, one lane width (AbstractLane.DEFAULT_WIDTH)
-VX_SCALE = 30.0    # m/s, legacy SPEED_NORM
-VY_SCALE = 30.0    # m/s, legacy SPEED_NORM
+VX_SCALE = 30.0    # m/s, SPEED_NORM
+VY_SCALE = 30.0    # m/s, SPEED_NORM
 SPEED_SCALE = 30.0  # m/s
 
 N_VEHICLES = 14     # other-vehicle slots in the observation
@@ -173,7 +173,7 @@ def make_deepset_env_v2(
 ) -> gym.Env:
     """Create a DeepSet v2 environment for highway-fast-v0 or merge-v1.
 
-    Reward, info, and action mask come from the legacy
+    Reward, info, and action mask come from
     TacticalLaneObservationWrapper (identical code path).
     Policy observation is built from tier-filtered Kinematics.
 
@@ -188,7 +188,7 @@ def make_deepset_env_v2(
         target_speeds: Override DiscreteMetaAction target speeds. For highway, defaults
             to the validated floor-speed fix [10, 15, 20, 25, 30]. For merge, defaults
             to highway-env's built-in [20, 25, 30] unless specified.
-        lateral_debounce_steps: Minimum lock steps preventing opposing lateral reversals (default: 5).
+        lateral_debounce_steps: Minimum lock steps preventing opposing lateral reversals (default: 0).
 
     Returns:
         Gymnasium env producing flat (74,) observations.
@@ -242,7 +242,7 @@ def make_deepset_env_v2(
     # Insert tier-filtering stash wrapper below the tactical wrapper
     env = _KinematicsStashWrapper(env, tier=tier)
 
-    # Legacy reward/info wrapper (reward shaping ON, continuous features OFF)
+    # Tactical reward/info wrapper (reward shaping ON, continuous features OFF)
     env = TacticalLaneObservationWrapper(
         env,
         collision_penalty=collision_penalty,

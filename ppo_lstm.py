@@ -2,8 +2,8 @@
 
 Implements Truncated Backpropagation Through Time (T-BPTT) with:
 - Decoupled Actor and Critic recurrent networks (separate LSTMs to prevent gradient interference)
-- Invalid Action Masking (Mechanism C) for boundary compliance
-- Tactical Overtaking (Mechanisms A & B) via env_config.TacticalOvertakingWrapper
+- Invalid Action Masking for boundary compliance
+- Tactical Overtaking (headway penalty and overtake bonus) via env_config.TacticalOvertakingWrapper
 - Full evaluation across 30 benchmark test seeds (2000-2029)
 """
 
@@ -85,7 +85,7 @@ def parse_args() -> argparse.Namespace:
         dest="bootstrap_truncation",
         action="store_true",
         default=False,
-        help="Bootstrap value of final observation upon episode truncation (B7-1 fix).",
+        help="Bootstrap value of final observation upon episode truncation.",
     )
     parser.add_argument(
         "--checkpoint-dir",
@@ -93,7 +93,7 @@ def parse_args() -> argparse.Namespace:
         dest="checkpoint_dir",
         type=str,
         default=None,
-        help="Directory to save periodic training checkpoints (D1-1).",
+        help="Directory to save periodic training checkpoints.",
     )
     parser.add_argument(
         "--save-frequency",
@@ -123,7 +123,7 @@ def parse_args() -> argparse.Namespace:
         dest="keep_phantom_samples",
         action="store_true",
         default=False,
-        help="Restore legacy unmasked phantom samples and pre-LSTM reset timing.",
+        help="Keep unmasked phantom samples and step-aligned reset timing.",
     )
     parser.add_argument(
         "--profile",
@@ -523,7 +523,7 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
         batch_size=args.num_envs, device=device
     )
 
-    # Resume support (D1-1)
+    # Resume support
     start_iteration = 1
     last_save_step = 0
     if getattr(args, "resume", None) and os.path.exists(args.resume):
@@ -829,7 +829,7 @@ def train_ppo_lstm(args: argparse.Namespace) -> str:
                 flush=True,
             )
 
-        # Checkpointing (D1-1)
+        # Checkpointing
         if getattr(args, "checkpoint_dir", None) and (global_step - last_save_step >= getattr(args, "save_frequency", 50000)):
             os.makedirs(args.checkpoint_dir, exist_ok=True)
             ckpt_data = {

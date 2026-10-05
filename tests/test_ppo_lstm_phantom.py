@@ -226,7 +226,7 @@ class TestPPOLSTMPhantom(unittest.TestCase):
             max_diff_lp = max(max_diff_lp, diff_lp)
             max_diff_val = max(max_diff_val, diff_val)
 
-        # Under legacy behavior, state IS contaminated so diffs must be non-zero (> 1e-5)
+        # Under unmasked behavior, state is contaminated so diffs must be non-zero (> 1e-5)
         self.assertGreater(max_diff_lp, 1e-5, f"Expected contamination with keep_phantom_samples, got max_diff_lp={max_diff_lp}")
         self.assertGreater(max_diff_val, 1e-5, f"Expected contamination with keep_phantom_samples, got max_diff_val={max_diff_val}")
 

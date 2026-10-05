@@ -1,4 +1,4 @@
-"""Test checkpoint saving, RNG serialization, and resume capability (D1-1).
+"""Test checkpoint saving, RNG serialization, and resume capability.
 
 Tests:
 1. Train an agent for 20,000 steps.
@@ -34,7 +34,7 @@ class TestCheckpointResume(unittest.TestCase):
 
     def test_checkpoint_and_resume_20k(self) -> None:
         """Train 20k steps, stop, resume, and confirm step count, optimizer, and loss curve."""
-        # Setup arguments for phase 1: 20k steps
+        # Setup arguments for initial training: 20k steps
         # 4 envs, 128 steps per rollout = 512 steps per iteration
         # 39 iterations * 512 = 19,968 steps (~20k steps)
         # 40 iterations * 512 = 20,480 steps
@@ -75,7 +75,7 @@ class TestCheckpointResume(unittest.TestCase):
             eval_seed_start=2000,
         )
 
-        print(f"\n--- Phase 1: Training {total_steps_phase1} steps ---")
+        print(f"\n--- Initial Training: {total_steps_phase1} steps ---")
         saved_path1 = train(args1)
 
         # 1. Verify checkpoint exists in test_dir
@@ -135,7 +135,7 @@ class TestCheckpointResume(unittest.TestCase):
             eval_seed_start=2000,
         )
 
-        print(f"\n--- Phase 2: Resuming from {phase1_step} up to {total_steps_phase2} steps ---")
+        print(f"\n--- Resume Training: from {phase1_step} up to {total_steps_phase2} steps ---")
         saved_path2 = train(args2)
 
         # 4. Verify resumed checkpoint
@@ -147,7 +147,7 @@ class TestCheckpointResume(unittest.TestCase):
         print(f"✓ Resume validated: advanced from {phase1_step} to {phase2_step} steps (iteration {phase2_iter})")
 
     def test_ppo_checkpoint_and_resume(self) -> None:
-        """Verify ppo.py D1-1 checkpoint saving, RNG state, resume capability, and tooling guard."""
+        """Verify ppo.py checkpoint saving, RNG state, resume capability, and tooling guard."""
         import argparse
         num_envs = 2
         num_steps = 32
@@ -181,7 +181,7 @@ class TestCheckpointResume(unittest.TestCase):
             output_path=None,
         )
 
-        print("\n--- Testing PPO: Phase 1 (Training & Checkpoint Saving) ---")
+        print("\n--- Testing PPO: Initial Training & Checkpoint Saving ---")
         saved_path1 = ppo.train_ppo(args1)
 
         # 1. Tooling guard check: ensure low-step run did NOT write into models/
@@ -233,7 +233,7 @@ class TestCheckpointResume(unittest.TestCase):
             output_path=None,
         )
 
-        print("\n--- Testing PPO: Phase 2 (Resuming) ---")
+        print("\n--- Testing PPO: Resuming ---")
         saved_path2 = ppo.train_ppo(args2)
         resumed_ckpt = torch.load(latest_ckpt, map_location="cpu", weights_only=False)
         self.assertGreaterEqual(resumed_ckpt["global_step"], steps_phase2)
@@ -241,7 +241,7 @@ class TestCheckpointResume(unittest.TestCase):
         print(f"✓ PPO Resume validated: advanced from {phase1_step} to {resumed_ckpt['global_step']} steps")
 
     def test_ppo_lstm_checkpoint_and_resume(self) -> None:
-        """Verify ppo_lstm.py D1-1 checkpoint saving, RNG state, resume capability, and tooling guard."""
+        """Verify ppo_lstm.py checkpoint saving, RNG state, resume capability, and tooling guard."""
         import argparse
         num_envs = 2
         num_steps = 32
@@ -273,7 +273,7 @@ class TestCheckpointResume(unittest.TestCase):
             output_path=None,
         )
 
-        print("\n--- Testing PPO-LSTM: Phase 1 (Training & Checkpoint Saving) ---")
+        print("\n--- Testing PPO-LSTM: Initial Training & Checkpoint Saving ---")
         saved_path1 = ppo_lstm.train_ppo_lstm(args1)
 
         # 1. Tooling guard check: ensure low-step run did NOT write into models/
@@ -323,7 +323,7 @@ class TestCheckpointResume(unittest.TestCase):
             output_path=None,
         )
 
-        print("\n--- Testing PPO-LSTM: Phase 2 (Resuming) ---")
+        print("\n--- Testing PPO-LSTM: Resuming ---")
         saved_path2 = ppo_lstm.train_ppo_lstm(args2)
         resumed_ckpt = torch.load(latest_ckpt, map_location="cpu", weights_only=False)
         self.assertGreaterEqual(resumed_ckpt["global_step"], steps_phase2)
