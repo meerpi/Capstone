@@ -153,14 +153,3 @@ pytest tests/test_render_utils.py
 
 ---
 
-## Citation
-
-```bibtex
-@misc{mahanty2026sensorbudgeted,
-  author = {Aritra Mahanty},
-  title = {Sensor-Budgeted Autonomous Highway Driving: Multi-Paradigm Motion Planning & Reinforcement Learning Benchmark},
-  year = {2026},
-  publisher = {GitHub},
-  howpublished = {\url{https://github.com/meerpi/Capstone}}
-}
-```
