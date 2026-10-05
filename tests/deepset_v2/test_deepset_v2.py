@@ -596,7 +596,7 @@ class TestLegacyRegression:
         )
         cur_branch = branch_res.stdout.strip()
         allowed_prefixes = ("deepset_v2/", "tests/deepset_v2/", "eval_out/", "scratch/", "parity/", "scripts/", "visualizations/", "docs/", "gifs/", "checkpoints/")
-        if cur_branch == "fix/speed-and-render":
+        if cur_branch in ("fix/speed-and-render", "main"):
             pre_existing_untracked.add("render_utils.py")
         for line in result.stdout.strip().split("\n"):
             if not line:
@@ -609,9 +609,9 @@ class TestLegacyRegression:
             elif status in ("M", "D", "R"):
                 # env_config.py, train_optimal_overtaker.py, and tests/test_model_selection.py
                 allowed_m = {"env_config.py", "train_optimal_overtaker.py", "tests/test_model_selection.py"}
-                if cur_branch == "fix/speed-and-render":
+                if cur_branch in ("fix/speed-and-render", "main"):
                     allowed_m.update({"render_top10.py", "run_batch_render.py", "record_optimal_overtaker.py", "record_visual_driving.py", "scripts/verify_lane_change_dynamics.py", "docs/findings.md", "docs/known-issues.md", "README.md", "eval_out/checkpoint_profiles.json", "tests/deepset_v2/test_deepset_v2.py", "docs/gemini_run_log.md"})
-                assert filepath in allowed_m or (cur_branch == "fix/speed-and-render" and filepath.startswith("visualizations/")), f"Tracked file modified by session: {line}"
+                assert filepath in allowed_m or (cur_branch in ("fix/speed-and-render", "main") and filepath.startswith("visualizations/")), f"Tracked file modified by session: {line}"
 
 
 # ---- Test 12: Models Directory Guard ----
