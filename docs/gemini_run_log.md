@@ -83,3 +83,26 @@
   - All 10/10 GIFs measured at exactly **0.0% reverse frames** with period 165.0 px.
   - Acceptance criterion met: 0% reverse illusion at all speeds.
   - Telemetry manifest generated at `visualizations/top10_v2/top10_episodes_manifest.json`.
+
+## Full Repository GIF Re-rendering and Replacement
+
+### Scope of Re-rendered Visualizations
+1. **Top 10 Showcase (`visualizations/top10/`)**:
+   - Replaced all 10 original aliased GIFs and MP4s with anti-aliased, extended HUD telemetry versions from `top10_v2`.
+   - Updated `manifest.json`.
+   - Verified 0.0% reverse aliasing.
+
+2. **Benchmark Comparisons (`visualizations/`)**:
+   - Re-rendered all 12 baseline configurations (PPO, PPO-LSTM, Classical MOBIL, Classical IDM across `full_adas` and `front_only`, seeds 2002 and 2015).
+   - Re-rendered optimal overtaker standalone visualizations (`ppo_optimal_overtaker_4lane`, `seed2000`, `seed2009`, `1000steps`).
+   - Re-rendered lane change verification sets (`visualizations/lane_change_verification/` and `visualizations/lane_change_verification_best/`).
+   - Verified 0.0% reverse aliasing across all.
+
+3. **Showcase Figure Collection (`gifs/`)**:
+   - Re-rendered entire 165-episode showcase collection across 15 categories (`clean_best_overall`, `clean_fastest`, `clean_most_overtakes`, `clean_smoothest`, `clean_dense_traffic`, `most_lane_changes`, `paired_density`, `paired_floor_fix`, `paired_sensor_tier`, `policy_best_clean`, `policy_best_crash`, `crash_blind_spot`, `crash_fastest`, `crash_floor_speed`, `crash_lane_change`).
+   - Applied `apply_anti_alias_stripes()` in `scripts/render_showcase.py`.
+   - Handled Lagrangian PPO cost critic checkpoints via `strict=False`.
+   - Verified simulation determinism against `gifs/manifest.json`.
+   - Re-generated `gifs/INDEX.md`.
+   - Audited sampled GIFs: all measured 0.0% reverse frames (165.0 px dash period).
+

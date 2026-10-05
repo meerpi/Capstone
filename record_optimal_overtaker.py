@@ -62,15 +62,17 @@ def record_optimal_episode(
     seed: int = 2002,
     max_steps: int = 500,
     output_gif: str = "visualizations/ppo_optimal_overtaker_4lane.gif",
-    output_mp4: str = "visualizations/ppo_optimal_overtaker_4lane.mp4",
+    output_mp4: str | None = "visualizations/ppo_optimal_overtaker_4lane.mp4",
     artifact_dir: str | None = None,
     fps: int = 15,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
+    target_speeds: list[float] | None = None,
+    duration: int | None = None,
 ):
     apply_anti_alias_stripes()
     os.makedirs(os.path.dirname(output_gif), exist_ok=True)
 
-    duration_sec = int(np.ceil(max_steps / 5)) + 10
+    duration_sec = duration if duration is not None else int(np.ceil(max_steps / 5)) + 10
     env = env_config.make_optimal_env(
         lanes_count=lanes_count,
         vehicles_density=vehicles_density,
@@ -79,6 +81,7 @@ def record_optimal_episode(
         frame_stack_k=3,
         duration=duration_sec,
         render_mode="rgb_array",
+        target_speeds=target_speeds,
     )
     env.unwrapped.config["offscreen_rendering"] = True
 
@@ -88,9 +91,9 @@ def record_optimal_episode(
     agent = OptimalAgent(obs_dim=obs_dim, action_dim=action_dim).to(device)
     checkpoint = torch.load(model_path, map_location=device)
     if "model_state_dict" in checkpoint:
-        agent.load_state_dict(checkpoint["model_state_dict"])
+        agent.load_state_dict(checkpoint["model_state_dict"], strict=False)
     else:
-        agent.load_state_dict(checkpoint)
+        agent.load_state_dict(checkpoint, strict=False)
     agent.eval()
 
     obs, info = env.reset(seed=seed)
@@ -172,21 +175,22 @@ def record_optimal_episode(
     print(f"Saved GIF: {output_gif} ({len(frames)} frames)")
 
     # Save MP4 via imageio or cv2
-    try:
-        import imageio
-        with imageio.get_writer(output_mp4, fps=fps, codec="libx264", quality=8) as writer:
-            for f in frames:
-                writer.append_data(np.array(f))
-        print(f"Saved MP4: {output_mp4}")
-    except Exception as e:
-        print(f"Could not save MP4 via imageio: {e}")
+    if output_mp4:
+        try:
+            import imageio
+            with imageio.get_writer(output_mp4, fps=fps, codec="libx264", quality=8) as writer:
+                for f in frames:
+                    writer.append_data(np.array(f))
+            print(f"Saved MP4: {output_mp4}")
+        except Exception as e:
+            print(f"Could not save MP4 via imageio: {e}")
 
     # Copy to artifact directory if provided
     if artifact_dir and os.path.exists(artifact_dir):
         art_gif = os.path.join(artifact_dir, os.path.basename(output_gif))
         shutil.copy2(output_gif, art_gif)
         print(f"Copied to artifact dir: {art_gif}")
-        if os.path.exists(output_mp4):
+        if output_mp4 and os.path.exists(output_mp4):
             art_mp4 = os.path.join(artifact_dir, os.path.basename(output_mp4))
             shutil.copy2(output_mp4, art_mp4)
             print(f"Copied to artifact dir: {art_mp4}")

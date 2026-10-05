@@ -222,25 +222,39 @@ def record_ppo_episode(
     device_name: str = "cpu",
     fps: int = 20,
     max_steps: int = 500,
+    vehicles_density: float = 1.4,
+    vehicles_count: int = 14,
+    duration: int = 100,
 ) -> dict:
     """Record an episode of trained Feedforward PPO and export to GIF and MP4."""
     apply_anti_alias_stripes()
     import ppo
     device = torch.device(device_name)
-    env = env_config.make_env(
-        scenario="highway",
-        tier=tier,
-        seed=seed,
-        render_mode="rgb_array",
-        tactical_overtaking=True,
-    )
+    state_dict = torch.load(model_path, map_location=device)
+    obs_dim_ckpt = state_dict["actor.0.weight"].shape[1]
+    veh_count = obs_dim_ckpt // 5
+
+    env_kwargs = {
+        "scenario": "highway",
+        "tier": tier,
+        "seed": seed,
+        "render_mode": "rgb_array",
+        "tactical_overtaking": True,
+        "vehicles_density": vehicles_density,
+        "vehicles_count": vehicles_count,
+        "duration": duration,
+    }
+    if veh_count != 15:
+        env_kwargs["observation"] = {"vehicles_count": veh_count}
+
+    env = env_config.make_env(**env_kwargs)
     env.unwrapped.config["offscreen_rendering"] = True
 
     obs_dim = int(np.prod(env.observation_space.shape))
     action_dim = env.action_space.n
 
     agent = ppo.Agent(obs_dim, action_dim).to(device)
-    agent.load_state_dict(torch.load(model_path, map_location=device))
+    agent.load_state_dict(state_dict)
     agent.eval()
 
     obs_np, info = env.reset(seed=seed)
@@ -313,6 +327,9 @@ def record_classical_episode(
     output_mp4: str | None = "visualizations/classical_mobil_front_only_seed2002.mp4",
     fps: int = 20,
     max_steps: int = 500,
+    vehicles_density: float = 1.4,
+    vehicles_count: int = 14,
+    duration: int = 100,
 ) -> dict:
     """Record a Classical IDM or IDM+MOBIL episode and export to GIF/MP4."""
     apply_anti_alias_stripes()
@@ -325,6 +342,9 @@ def record_classical_episode(
         seed=seed,
         render_mode="rgb_array",
         tactical_overtaking=True,
+        vehicles_density=vehicles_density,
+        vehicles_count=vehicles_count,
+        duration=duration,
     )
     env.unwrapped.config["offscreen_rendering"] = True
 
@@ -472,6 +492,8 @@ if __name__ == "__main__":
             {"agent": "ppo", "tier": "front_only", "seed": 2002, "gif": "visualizations/ppo_front_only_seed2002.gif", "mp4": "visualizations/ppo_front_only_seed2002.mp4"},
             {"agent": "ppo_lstm", "tier": "full_adas", "seed": 2015, "gif": "visualizations/ppo_lstm_full_adas_seed2015.gif", "mp4": "visualizations/ppo_lstm_full_adas_seed2015.mp4"},
             {"agent": "ppo_lstm", "tier": "front_only", "seed": 2015, "gif": "visualizations/ppo_lstm_front_only_seed2015.gif", "mp4": "visualizations/ppo_lstm_front_only_seed2015.mp4"},
+            {"agent": "ppo_lstm", "tier": "full_adas", "seed": 2002, "gif": "visualizations/ppo_lstm_full_adas_seed2002.gif", "mp4": "visualizations/ppo_lstm_full_adas_seed2002.mp4"},
+            {"agent": "ppo_lstm", "tier": "front_only", "seed": 2002, "gif": "visualizations/ppo_lstm_front_only_seed2002.gif", "mp4": "visualizations/ppo_lstm_front_only_seed2002.mp4"},
             {"agent": "classical_mobil", "tier": "full_adas", "seed": 2002, "gif": "visualizations/classical_mobil_full_adas_seed2002.gif", "mp4": "visualizations/classical_mobil_full_adas_seed2002.mp4"},
             {"agent": "classical_mobil", "tier": "front_only", "seed": 2002, "gif": "visualizations/classical_mobil_front_only_seed2002.gif", "mp4": "visualizations/classical_mobil_front_only_seed2002.mp4"},
             {"agent": "classical_idm", "tier": "full_adas", "seed": 2002, "gif": "visualizations/classical_idm_full_adas_seed2002.gif", "mp4": "visualizations/classical_idm_full_adas_seed2002.mp4"},

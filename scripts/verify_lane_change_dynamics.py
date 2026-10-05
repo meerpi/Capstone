@@ -22,6 +22,7 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 import env_config
+from render_utils import apply_anti_alias_stripes
 from train_optimal_overtaker import OptimalAgent
 
 ACTION_NAMES = {
@@ -89,6 +90,7 @@ def analyze_and_record_episodes(
     target_speeds: list[float] = [10.0, 15.0, 20.0, 25.0, 30.0],
     fps: int = 15,
 ) -> dict[str, Any]:
+    apply_anti_alias_stripes()
     os.makedirs(output_dir, exist_ok=True)
     if artifact_dir:
         os.makedirs(artifact_dir, exist_ok=True)
