@@ -15,6 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 import env_config
 from ppo_lstm import RecurrentAgent
+from render_utils import apply_anti_alias_stripes, get_rendered_frame
 
 ACTION_NAMES = {
     0: "LANE_LEFT",
@@ -56,17 +57,6 @@ def draw_telemetry(
     draw.text((8, 5), telemetry_str, fill=(240, 240, 240))
     draw.text((img.width - 65, 5), status_text, fill=status_color)
     return img
-
-
-def get_rendered_frame(env) -> np.ndarray:
-    """Safely render frame from environment, ensuring offscreen viewer is enabled."""
-    frame = env.render()
-    unwrapped = env.unwrapped
-    if hasattr(unwrapped, "viewer") and unwrapped.viewer is not None:
-        if not unwrapped.viewer.enabled:
-            unwrapped.viewer.enabled = True
-            frame = env.render()
-    return frame
 
 
 def save_video_artifacts(frames: list[Image.Image], output_gif: str, output_mp4: str | None, fps: int = 20) -> None:
@@ -138,6 +128,7 @@ def record_episode(
     fps: int = 20,
     max_steps: int = 500,
 ) -> dict:
+    apply_anti_alias_stripes()
     device = torch.device(device_name)
     state_dict = torch.load(model_path, map_location=device)
     obs_dim_ckpt = state_dict["actor.feature_net.0.weight"].shape[1]
@@ -233,6 +224,7 @@ def record_ppo_episode(
     max_steps: int = 500,
 ) -> dict:
     """Record an episode of trained Feedforward PPO and export to GIF and MP4."""
+    apply_anti_alias_stripes()
     import ppo
     device = torch.device(device_name)
     env = env_config.make_env(
@@ -323,6 +315,7 @@ def record_classical_episode(
     max_steps: int = 500,
 ) -> dict:
     """Record a Classical IDM or IDM+MOBIL episode and export to GIF/MP4."""
+    apply_anti_alias_stripes()
     import baseline_classical
     params = baseline_classical.DEFAULT_IDM_PARAMS
 

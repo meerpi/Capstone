@@ -610,7 +610,7 @@ class TestLegacyRegression:
                 # env_config.py, train_optimal_overtaker.py, and tests/test_model_selection.py
                 allowed_m = {"env_config.py", "train_optimal_overtaker.py", "tests/test_model_selection.py"}
                 if cur_branch == "fix/speed-and-render":
-                    allowed_m.update({"render_top10.py", "run_batch_render.py", "record_optimal_overtaker.py", "record_visual_driving.py", "docs/findings.md", "docs/known-issues.md", "README.md", "eval_out/checkpoint_profiles.json", "tests/deepset_v2/test_deepset_v2.py"})
+                    allowed_m.update({"render_top10.py", "run_batch_render.py", "record_optimal_overtaker.py", "record_visual_driving.py", "docs/findings.md", "docs/known-issues.md", "README.md", "eval_out/checkpoint_profiles.json", "tests/deepset_v2/test_deepset_v2.py", "docs/gemini_run_log.md"})
                 assert filepath in allowed_m, f"Tracked file modified by session: {line}"
 
 

@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import env_config
 from train_optimal_overtaker import OptimalAgent
+from render_utils import apply_anti_alias_stripes, get_rendered_frame
 
 ACTION_NAMES = {
     0: "LANE_LEFT",
@@ -53,17 +54,6 @@ def overlay_hud(
     return img
 
 
-def get_rendered_frame(env) -> np.ndarray:
-    """Safely render frame from environment."""
-    frame = env.render()
-    unwrapped = env.unwrapped
-    if hasattr(unwrapped, "viewer") and unwrapped.viewer is not None:
-        if not unwrapped.viewer.enabled:
-            unwrapped.viewer.enabled = True
-            frame = env.render()
-    return frame
-
-
 def record_optimal_episode(
     model_path: str = "models/ppo_optimal_overtaker_4lane_best.pt",
     lanes_count: int = 4,
@@ -77,6 +67,7 @@ def record_optimal_episode(
     fps: int = 15,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
 ):
+    apply_anti_alias_stripes()
     os.makedirs(os.path.dirname(output_gif), exist_ok=True)
 
     duration_sec = int(np.ceil(max_steps / 5)) + 10

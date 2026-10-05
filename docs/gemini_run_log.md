@@ -47,3 +47,39 @@
   - Estimated duration per run at 1,200 SPS: ~250 s (~4.2 minutes).
   - 5 condition ablations (Baseline, A: Relative progress reward, B: Fast flow profile, A+B: Combined, C: Action space) × 3 seeds = 15 runs.
   - Total training time: ~63 minutes, well within autonomous execution window.
+
+## Phase 1 - Fix the Rendering Illusion
+
+### Implementation Details
+- Centralized helper `render_utils.py` defining:
+  - `ANTI_ALIAS_STRIPE_SPACING = 30.0` m, `ANTI_ALIAS_STRIPE_LENGTH = 15.0` m.
+  - `get_rendered_frame(env)`: handles headless offscreen viewer enabling and asserts `frame.max() > 0`.
+  - `compute_mean_npc_speed(env)`: computes instantaneous mean speed of all active NPCs.
+  - `compute_in_lane_leader_speed(env)`: identifies leading vehicle in ego lane.
+  - `frame_duration_ms(realtime)`: 200 ms for realtime (5 fps), 67 ms for fast default (15 fps).
+- Applied in:
+  - `render_top10.py`
+  - `run_batch_render.py`
+  - `record_optimal_overtaker.py`
+  - `record_visual_driving.py`
+- Added `--realtime` flag to `render_top10.py` and `run_batch_render.py`.
+- Removed hard-coded artifact directory from `run_batch_render.py`, parameterized CLI `--output-dir` and `--artifact-dir`.
+- Extended telemetry HUD banner with:
+  - Ego speed (km/h)
+  - Traffic flow speed (km/h)
+  - Relative speed (ego - flow) (km/h)
+  - Cumulative % steps at floor setpoint (20 m/s / 72 km/h)
+  - Lane, Action, Overtakes, Lane Changes, Status
+
+### Temporal Aliasing Verification (`scripts/check_render_aliasing.py`)
+- Analyzed 6 original GIFs in `visualizations/top10/` to verify baseline percentages:
+  - `ppo_top_1_seed_3094.gif`: 0.0% (expected 0%) -> OK
+  - `ppo_top_2_seed_3115.gif`: 27.7% (expected 28%) -> OK
+  - `ppo_top_3_seed_3010.gif`: 37.7% (expected 38%) -> OK
+  - `ppo_top_4_seed_3000.gif`: 3.6% (expected 4%) -> OK
+  - `ppo_top_5_seed_3019.gif`: 66.9% (expected 67%) -> OK
+  - `ppo_top_6_seed_3092.gif`: 65.7% (expected 66%) -> OK
+- Rendered all 10 showcase seeds to `visualizations/top10_v2/`:
+  - All 10/10 GIFs measured at exactly **0.0% reverse frames** with period 165.0 px.
+  - Acceptance criterion met: 0% reverse illusion at all speeds.
+  - Telemetry manifest generated at `visualizations/top10_v2/top10_episodes_manifest.json`.
